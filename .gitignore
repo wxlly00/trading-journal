@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build
+frontend/dist/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+.pytest_cache/
+
+# Env
+.env
+.env.local
+frontend/.env
+frontend/.env.local
+
+# Vite
+frontend/.vite/
+
+# OS
+.DS_Store
+
+# Supabase local
+.supabase/
+
+# Logs
+*.log
