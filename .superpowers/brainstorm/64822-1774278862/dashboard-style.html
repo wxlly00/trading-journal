@@ -1,0 +1,256 @@
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #e8e8e8; font-family: 'Inter', -apple-system, sans-serif; }
+  .app { display: flex; height: 100vh; max-width: 1100px; margin: 20px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+
+  /* Sidebar */
+  .sidebar { width: 200px; background: #fff; display: flex; flex-direction: column; padding: 24px 16px; flex-shrink: 0; }
+  .logo { font-size: 18px; font-weight: 800; color: #111; margin-bottom: 32px; padding: 0 8px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: #888; font-size: 13px; cursor: pointer; margin-bottom: 4px; }
+  .nav-item.active { color: #111; background: #f5f5f5; font-weight: 600; }
+  .nav-item svg { width: 16px; height: 16px; }
+  .upgrade-card { background: #111; border-radius: 14px; padding: 14px; margin: auto 0 16px; }
+  .upgrade-card p { color: #aaa; font-size: 11px; margin: 6px 0 10px; line-height: 1.5; }
+  .upgrade-card .title { color: #fff; font-size: 13px; font-weight: 700; }
+  .upgrade-btn { background: #fff; color: #111; border: none; border-radius: 8px; padding: 8px 16px; font-size: 12px; font-weight: 700; width: 100%; cursor: pointer; }
+  .nav-bottom { margin-top: 8px; }
+
+  /* Main */
+  .main { flex: 1; background: #f5f5f5; overflow-y: auto; padding: 24px; }
+  .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .topbar h1 { font-size: 22px; font-weight: 800; color: #111; flex: 1; }
+  .period-tabs { display: flex; gap: 4px; background: #fff; border-radius: 10px; padding: 4px; }
+  .tab { padding: 5px 12px; border-radius: 7px; font-size: 12px; color: #888; cursor: pointer; }
+  .tab.active { background: #111; color: #fff; font-weight: 600; }
+  .date-range { background: #fff; border-radius: 10px; padding: 7px 12px; font-size: 12px; color: #666; }
+
+  /* KPI Cards */
+  .kpi-row { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .kpi-card { background: #fff; border-radius: 16px; padding: 18px; }
+  .kpi-card.dark { background: #111; }
+  .kpi-label { font-size: 11px; color: #999; margin-bottom: 8px; font-weight: 500; }
+  .kpi-card.dark .kpi-label { color: #666; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: #111; }
+  .kpi-card.dark .kpi-value { color: #fff; }
+  .kpi-change { font-size: 11px; color: #22c55e; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
+  .kpi-change.down { color: #ef4444; }
+
+  /* Content grid */
+  .content-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .card { background: #fff; border-radius: 16px; padding: 18px; }
+  .card-title { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+  .card-icon { width: 28px; height: 28px; background: #f5f5f5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+  /* Bar chart */
+  .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 100px; }
+  .bar-group { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bar { width: 100%; border-radius: 6px 6px 0 0; background: #111; }
+  .bar.active { background: #555; }
+  .bar.neg { background: #e5e5e5; }
+  .bar-label { font-size: 10px; color: #999; }
+  .bar-label.active { font-weight: 700; color: #111; }
+
+  /* Win rate circle */
+  .stat-row { display: flex; flex-direction: column; gap: 10px; }
+  .stat-item { display: flex; justify-content: space-between; align-items: center; }
+  .stat-name { font-size: 12px; color: #666; }
+  .stat-val { font-size: 13px; font-weight: 700; color: #111; }
+  .mini-bar-wrap { flex: 1; margin: 0 10px; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+  .mini-bar { height: 100%; border-radius: 3px; background: #111; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; }
+  th { font-size: 11px; color: #999; font-weight: 600; padding: 8px 0; text-align: left; border-bottom: 1px solid #f0f0f0; }
+  td { font-size: 12px; color: #333; padding: 10px 0; border-bottom: 1px solid #f8f8f8; }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .badge.win { background: #111; color: #fff; }
+  .badge.loss { background: #f0f0f0; color: #999; }
+  .pair-tag { font-weight: 700; color: #111; }
+  .dir-buy { color: #22c55e; font-weight: 700; font-size: 11px; }
+  .dir-sell { color: #ef4444; font-weight: 700; font-size: 11px; }
+  .pos-pnl { color: #22c55e; font-weight: 700; }
+  .neg-pnl { color: #ef4444; font-weight: 700; }
+</style>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">TJ</div>
+
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Journal
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Statistiques
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Performance
+    </div>
+
+    <div class="upgrade-card" style="margin-top:auto;margin-bottom:16px">
+      <div class="title">Compte XM</div>
+      <p>Broker connecté<br>#123456 · Live</p>
+      <div style="background:#333;border-radius:8px;padding:6px 10px;font-size:11px;color:#aaa;text-align:center">● EA actif</div>
+    </div>
+
+    <div class="nav-bottom">
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Paramètres
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Dashboard</h1>
+      <div class="period-tabs">
+        <div class="tab">Jour</div>
+        <div class="tab">Semaine</div>
+        <div class="tab active">Mois</div>
+        <div class="tab">Année</div>
+      </div>
+      <div class="date-range">📅 1 Mar – 23 Mar 2026</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card dark">
+        <div class="kpi-label">P&L Total</div>
+        <div class="kpi-value">+$842</div>
+        <div class="kpi-change">↑ 8.4% ce mois</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value">64.2%</div>
+        <div class="kpi-change">↑ 2.1% vs mois dernier</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">R:R Moyen</div>
+        <div class="kpi-value">1:2.3</div>
+        <div class="kpi-change" style="color:#888">89 trades</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Drawdown Max</div>
+        <div class="kpi-value">-4.7%</div>
+        <div class="kpi-change down">↓ pic: 12 mars</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="content-grid">
+
+      <!-- P&L par semaine -->
+      <div class="card">
+        <div class="card-title">
+          P&L par semaine
+          <div class="card-icon">↗</div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:8px;height:110px;margin-bottom:8px">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border-radius:6px 6px 0 0;background:#111;height:60px"></div>
+            <span style="font-size:10px;color:#999">S1</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border-radius:6px 6px 0 0;background:#111;height:45px"></div>
+            <span style="font-size:10px;color:#999">S2</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border-radius:6px 6px 0 0;background:#555;height:85px"></div>
+            <span style="font-size:10px;color:#111;font-weight:700">S3 ★</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:100%;border-radius:6px 6px 0 0;background:#e5e5e5;height:30px"></div>
+            <span style="font-size:10px;color:#999">S4</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats rapides -->
+      <div class="card">
+        <div class="card-title">Performance par paire</div>
+        <div class="stat-row">
+          <div class="stat-item">
+            <span class="stat-name">XAUUSD</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:80%"></div></div>
+            <span class="stat-val pos-pnl">+$520</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-name">EURUSD</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:45%"></div></div>
+            <span class="stat-val pos-pnl">+$210</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-name">USDJPY</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:35%"></div></div>
+            <span class="stat-val pos-pnl">+$224</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-name">GBPUSD</span>
+            <div class="mini-bar-wrap"><div class="mini-bar" style="width:20%;background:#e5e5e5"></div></div>
+            <span class="stat-val neg-pnl">-$112</span>
+          </div>
+          <div style="margin-top:8px;padding-top:10px;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between">
+            <span style="font-size:11px;color:#999">Profit factor</span>
+            <span style="font-size:13px;font-weight:800;color:#111">1.84</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Derniers trades -->
+    <div class="card">
+      <div class="card-title">
+        Derniers trades
+        <div style="display:flex;gap:8px">
+          <div class="card-icon">↻</div>
+          <div class="card-icon">↗</div>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Paire</th><th>Direction</th><th>Entrée</th><th>Sortie</th><th>Lots</th><th>P&L</th><th>R:R</th><th>Durée</th><th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pair-tag">XAUUSD</span></td>
+            <td><span class="dir-buy">BUY</span></td>
+            <td>2024.01</td><td>2024.38</td><td>0.10</td>
+            <td class="pos-pnl">+$33.70</td><td>1:2.1</td><td>2h14</td>
+            <td><span class="badge win">WIN</span></td>
+          </tr>
+          <tr>
+            <td><span class="pair-tag">EURUSD</span></td>
+            <td><span class="dir-sell">SELL</span></td>
+            <td>1.0892</td><td>1.0901</td><td>0.20</td>
+            <td class="neg-pnl">-$18.00</td><td>1:0.5</td><td>45min</td>
+            <td><span class="badge loss">LOSS</span></td>
+          </tr>
+          <tr>
+            <td><span class="pair-tag">GBPUSD</span></td>
+            <td><span class="dir-buy">BUY</span></td>
+            <td>1.2741</td><td>1.2798</td><td>0.15</td>
+            <td class="pos-pnl">+$85.50</td><td>1:3.0</td><td>5h30</td>
+            <td><span class="badge win">WIN</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,183 @@
+<h2>Design du Dashboard</h2>
+<p class="subtitle">Wireframe des écrans principaux — 4 pages</p>
+
+<div class="mockup" style="margin-bottom:24px">
+  <div class="mockup-header">Page 1 — Vue générale (Dashboard)</div>
+  <div class="mockup-body" style="background:#0f0f0f;padding:0;font-family:sans-serif;font-size:12px">
+
+    <!-- Navbar -->
+    <div style="background:#18181b;padding:10px 16px;display:flex;align-items:center;gap:24px;border-bottom:1px solid #27272a">
+      <span style="color:#22c55e;font-weight:bold;font-size:13px">📈 TradingJournal</span>
+      <span style="color:#71717a">Dashboard</span>
+      <span style="color:#71717a">Journal</span>
+      <span style="color:#71717a">Statistiques</span>
+      <span style="color:#71717a">Paramètres</span>
+      <span style="margin-left:auto;color:#71717a;font-size:11px">XM · Compte #123456</span>
+    </div>
+
+    <!-- KPI cards -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px">
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px">
+        <div style="color:#71717a;font-size:10px">SOLDE</div>
+        <div style="color:#f4f4f5;font-size:16px;font-weight:bold">$10 842</div>
+        <div style="color:#22c55e;font-size:10px">+$842 ce mois</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px">
+        <div style="color:#71717a;font-size:10px">WIN RATE</div>
+        <div style="color:#f4f4f5;font-size:16px;font-weight:bold">64.2%</div>
+        <div style="color:#22c55e;font-size:10px">↑ +2.1% vs mois dernier</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px">
+        <div style="color:#71717a;font-size:10px">R:R MOYEN</div>
+        <div style="color:#f4f4f5;font-size:16px;font-weight:bold">1:2.3</div>
+        <div style="color:#71717a;font-size:10px">sur 89 trades</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px">
+        <div style="color:#71717a;font-size:10px">DRAWDOWN MAX</div>
+        <div style="color:#f4f4f5;font-size:16px;font-weight:bold">-4.7%</div>
+        <div style="color:#ef4444;font-size:10px">pic: 12 mars</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:10px">
+        <div style="color:#71717a;font-size:10px">PROFIT FACTOR</div>
+        <div style="color:#f4f4f5;font-size:16px;font-weight:bold">1.84</div>
+        <div style="color:#22c55e;font-size:10px">objectif: 2.0</div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;padding:0 12px 12px">
+
+      <!-- Equity curve -->
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px">
+        <div style="color:#f4f4f5;font-size:11px;font-weight:bold;margin-bottom:8px">Courbe d'équité</div>
+        <svg viewBox="0 0 320 80" style="width:100%;height:80px">
+          <polyline points="0,70 40,65 80,55 120,60 160,45 200,30 240,35 280,20 320,15"
+            fill="none" stroke="#22c55e" stroke-width="2"/>
+          <polyline points="0,70 40,65 80,55 120,60 160,45 200,30 240,35 280,20 320,15 320,80 0,80"
+            fill="url(#g)" stroke="none"/>
+          <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#22c55e" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+          </linearGradient></defs>
+        </svg>
+        <div style="display:flex;justify-content:space-between;color:#71717a;font-size:10px;margin-top:4px">
+          <span>Jan</span><span>Fév</span><span>Mar</span>
+        </div>
+      </div>
+
+      <!-- P&L par paire -->
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px">
+        <div style="color:#f4f4f5;font-size:11px;font-weight:bold;margin-bottom:10px">P&L par paire</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#a1a1aa;font-size:10px;width:50px">XAUUSD</span>
+            <div style="background:#22c55e;height:8px;border-radius:4px;width:70%"></div>
+            <span style="color:#22c55e;font-size:10px">+$520</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#a1a1aa;font-size:10px;width:50px">EURUSD</span>
+            <div style="background:#22c55e;height:8px;border-radius:4px;width:40%"></div>
+            <span style="color:#22c55e;font-size:10px">+$210</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#a1a1aa;font-size:10px;width:50px">GBPUSD</span>
+            <div style="background:#ef4444;height:8px;border-radius:4px;width:25%"></div>
+            <span style="color:#ef4444;font-size:10px">-$112</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="color:#a1a1aa;font-size:10px;width:50px">USDJPY</span>
+            <div style="background:#22c55e;height:8px;border-radius:4px;width:30%"></div>
+            <span style="color:#22c55e;font-size:10px">+$224</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Derniers trades -->
+    <div style="padding:0 12px 12px">
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px">
+        <div style="color:#f4f4f5;font-size:11px;font-weight:bold;margin-bottom:8px">Derniers trades</div>
+        <table style="width:100%;border-collapse:collapse;font-size:10px;color:#a1a1aa">
+          <tr style="color:#71717a;border-bottom:1px solid #27272a">
+            <td style="padding:4px 8px">Paire</td><td>Direction</td><td>Entrée</td><td>Sortie</td><td>Lots</td><td>P&L</td><td>R:R</td><td>Durée</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1f1f23">
+            <td style="padding:4px 8px;color:#f4f4f5">XAUUSD</td><td style="color:#22c55e">BUY</td><td>2024.01</td><td>2024.38</td><td>0.10</td><td style="color:#22c55e">+$33.70</td><td>1:2.1</td><td>2h14</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1f1f23">
+            <td style="padding:4px 8px;color:#f4f4f5">EURUSD</td><td style="color:#ef4444">SELL</td><td>1.0892</td><td>1.0901</td><td>0.20</td><td style="color:#ef4444">-$18.00</td><td>1:0.5</td><td>45min</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 8px;color:#f4f4f5">GBPUSD</td><td style="color:#22c55e">BUY</td><td>1.2741</td><td>1.2798</td><td>0.15</td><td style="color:#22c55e">+$85.50</td><td>1:3.0</td><td>5h30</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="mockup">
+  <div class="mockup-header">Page 2 — Journal des trades (liste + filtres)</div>
+  <div class="mockup-body" style="background:#0f0f0f;padding:12px;font-family:sans-serif;font-size:12px">
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="background:#27272a;border-radius:6px;padding:6px 12px;color:#a1a1aa;font-size:11px">📅 Période : Ce mois</div>
+      <div style="background:#27272a;border-radius:6px;padding:6px 12px;color:#a1a1aa;font-size:11px">Paire : Toutes</div>
+      <div style="background:#27272a;border-radius:6px;padding:6px 12px;color:#a1a1aa;font-size:11px">Direction : Toutes</div>
+      <div style="background:#27272a;border-radius:6px;padding:6px 12px;color:#a1a1aa;font-size:11px">Résultat : Tous</div>
+    </div>
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:12px;color:#a1a1aa;font-size:11px">
+      <div style="color:#f4f4f5;font-weight:bold;margin-bottom:6px">89 trades · cliquer pour voir détail + ajouter une note</div>
+      <div style="color:#71717a">[ tableau complet avec colonnes : #, Date, Paire, Dir, Lots, Entrée, SL, TP, Sortie, P&L, R:R réalisé, Durée, Note ]</div>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+  <div class="mockup">
+    <div class="mockup-header">Page 3 — Statistiques avancées</div>
+    <div class="mockup-body" style="background:#0f0f0f;padding:12px;font-family:sans-serif;font-size:11px;color:#a1a1aa">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px">
+          <div style="color:#71717a;font-size:10px">Heatmap P&L par jour semaine</div>
+          <div style="color:#f4f4f5;font-size:10px;margin-top:4px">Lun ▓▓▓ +$210<br>Mar ░░░ -$45<br>Mer ▓▓▓▓ +$320</div>
+        </div>
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px">
+          <div style="color:#71717a;font-size:10px">Sessions (London/NY/Asia)</div>
+          <div style="color:#f4f4f5;font-size:10px;margin-top:4px">London: 64% win ★<br>NY: 58% win<br>Asia: 45% win</div>
+        </div>
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px">
+          <div style="color:#71717a;font-size:10px">Distribution des trades</div>
+          <div style="color:#f4f4f5;font-size:10px;margin-top:4px">Wins: █████ 57<br>Losses: ███ 32</div>
+        </div>
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px">
+          <div style="color:#71717a;font-size:10px">Streak max</div>
+          <div style="color:#22c55e;font-size:10px;margin-top:4px">+7 wins consécutifs<br></div>
+          <div style="color:#ef4444;font-size:10px">-4 losses consécutifs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Page 4 — Paramètres</div>
+    <div class="mockup-body" style="background:#0f0f0f;padding:12px;font-family:sans-serif;font-size:11px;color:#a1a1aa">
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:10px;margin-bottom:8px">
+        <div style="color:#f4f4f5;font-size:11px;font-weight:bold">Connexion EA</div>
+        <div style="margin-top:6px;color:#71717a">Clé API : sk-••••••••••••••••</div>
+        <div style="color:#71717a">URL à configurer dans l'EA : https://ton-app.onrender.com</div>
+        <div style="color:#22c55e;font-size:10px;margin-top:4px">● Connecté — dernier ping il y a 3min</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:10px">
+        <div style="color:#f4f4f5;font-size:11px;font-weight:bold">Compte</div>
+        <div style="margin-top:6px;color:#71717a">Broker : XM.com · Capital initial : $10 000</div>
+        <div style="color:#71717a">Objectif mensuel : +5% · Max drawdown : 5%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top:20px;color:#8b949e;font-size:13px;text-align:center">
+  Ce layout te convient ? Dis-moi ce que tu veux modifier ou ajouter.
+</p>

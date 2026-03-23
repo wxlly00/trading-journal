@@ -1,0 +1,59 @@
+<h2>3 Architectures possibles</h2>
+<p class="subtitle">Choisir l'approche qui correspond le mieux à ton workflow</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Monolithe cloud</h3>
+      <p>L'EA envoie les trades directement vers l'API déployée sur internet (Railway/Render). Tout est dans le cloud.</p>
+      <div style="margin-top:12px;font-family:monospace;font-size:12px;background:#1a1a2e;padding:10px;border-radius:6px;color:#e0e0e0;line-height:1.8">
+        MT5 EA → <span style="color:#f0a500">Internet</span> → FastAPI (Railway)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        React (Vercel) ←──── PostgreSQL (Neon)
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Avantages</h4><ul><li>Setup unique, tout cloud</li><li>Accessible partout sans config locale</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>EA doit avoir internet pour logger</li><li>Latence réseau sur chaque trade</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Collecteur local + Cloud ⭐ Recommandée</h3>
+      <p>Un petit service tourne sur ton Mac pour recevoir l'EA. Il sync vers Supabase. Le dashboard est accessible partout.</p>
+      <div style="margin-top:12px;font-family:monospace;font-size:12px;background:#1a1a2e;padding:10px;border-radius:6px;color:#e0e0e0;line-height:1.8">
+        MT5 EA → <span style="color:#4caf50">localhost:8000</span> → Supabase (PostgreSQL)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; React (Vercel) ←────┘
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Avantages</h4><ul><li>EA push local = fiable, zéro latence</li><li>Dashboard accessible depuis téléphone</li><li>Supabase = free tier généreux</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Service local doit tourner quand MT5 est ouvert</li><li>Deux composants à gérer</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Tunnel Cloudflare</h3>
+      <p>Même logique que B, mais le service local est exposé via un tunnel Cloudflare (cloudflared) — pas besoin de cloud pour le backend.</p>
+      <div style="margin-top:12px;font-family:monospace;font-size:12px;background:#1a1a2e;padding:10px;border-radius:6px;color:#e0e0e0;line-height:1.8">
+        MT5 EA → localhost:8000 → SQLite (local)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓<br>
+        cloudflared → <span style="color:#f0a500">ton-app.trycloudflare.com</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↑<br>
+        React (Vercel)
+      </div>
+      <div class="pros-cons" style="margin-top:10px">
+        <div class="pros"><h4>Avantages</h4><ul><li>Zéro cloud payant</li><li>Données restent sur ton Mac</li></ul></div>
+        <div class="cons"><h4>Inconvénients</h4><ul><li>Mac doit être allumé pour accès mobile</li><li>URL change à chaque restart (version gratuite)</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+</div>

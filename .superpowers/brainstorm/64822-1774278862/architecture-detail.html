@@ -1,0 +1,96 @@
+<h2>Architecture — Trading Journal</h2>
+<p class="subtitle">Flux complet de données, de MT5 au dashboard</p>
+
+<div class="mockup">
+  <div class="mockup-header">Vue d'ensemble du système</div>
+  <div class="mockup-body" style="padding:24px;font-family:monospace;font-size:13px;line-height:2.2;background:#0d1117;color:#c9d1d9">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;margin-bottom:24px">
+
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px">
+        <div style="font-size:24px">🖥️</div>
+        <div style="color:#58a6ff;font-weight:bold;margin:4px 0">Ton Mac</div>
+        <div style="color:#8b949e;font-size:11px">MT5 + EA MQL5</div>
+        <div style="margin-top:8px;font-size:11px;color:#3fb950">HTTP POST /trades</div>
+      </div>
+
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px">
+        <div style="font-size:24px">⚙️</div>
+        <div style="color:#58a6ff;font-weight:bold;margin:4px 0">FastAPI (Render)</div>
+        <div style="color:#8b949e;font-size:11px">Backend Python</div>
+        <div style="margin-top:8px;font-size:11px;color:#3fb950">Valide · Calcule · Stocke</div>
+      </div>
+
+      <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px">
+        <div style="font-size:24px">🗄️</div>
+        <div style="color:#58a6ff;font-weight:bold;margin:4px 0">Supabase</div>
+        <div style="color:#8b949e;font-size:11px">PostgreSQL + Auth</div>
+        <div style="margin-top:8px;font-size:11px;color:#3fb950">trades · sessions · stats</div>
+      </div>
+
+    </div>
+
+    <div style="text-align:center;color:#8b949e;margin-bottom:24px;font-size:20px">
+      ↕ Supabase SDK
+    </div>
+
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:16px;text-align:center">
+      <div style="font-size:24px">📊</div>
+      <div style="color:#58a6ff;font-weight:bold;margin:4px 0">React + Recharts (Vercel)</div>
+      <div style="color:#8b949e;font-size:11px">Dashboard · Stats · Journal</div>
+    </div>
+
+  </div>
+</div>
+
+<div style="margin-top:24px">
+  <h3>Ce que fait chaque partie</h3>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+
+    <div style="background:#0d2818;border:1px solid #3fb950;border-radius:8px;padding:14px">
+      <div style="color:#3fb950;font-weight:bold;margin-bottom:8px">EA MQL5 (dans MT5)</div>
+      <ul style="color:#c9d1d9;font-size:13px;margin:0;padding-left:16px;line-height:1.8">
+        <li>Détecte ouverture / fermeture de position</li>
+        <li>Envoie HTTP POST à Render avec clé API</li>
+        <li>Retry automatique si échec</li>
+        <li>~50 lignes MQL5, 0 dépendance</li>
+      </ul>
+    </div>
+
+    <div style="background:#0d1a2e;border:1px solid #58a6ff;border-radius:8px;padding:14px">
+      <div style="color:#58a6ff;font-weight:bold;margin-bottom:8px">FastAPI Backend</div>
+      <ul style="color:#c9d1d9;font-size:13px;margin:0;padding-left:16px;line-height:1.8">
+        <li>Reçoit les trades de l'EA (clé API secrète)</li>
+        <li>Calcule P&L, R:R, durée, drawdown</li>
+        <li>Expose API REST pour le dashboard</li>
+        <li>Auth JWT pour le dashboard web</li>
+      </ul>
+    </div>
+
+    <div style="background:#1a0d2e;border:1px solid #bc8cff;border-radius:8px;padding:14px">
+      <div style="color:#bc8cff;font-weight:bold;margin-bottom:8px">Supabase (DB)</div>
+      <ul style="color:#c9d1d9;font-size:13px;margin:0;padding-left:16px;line-height:1.8">
+        <li>Table <code>trades</code> — chaque position</li>
+        <li>Table <code>daily_stats</code> — agrégats par jour</li>
+        <li>Table <code>notes</code> — annotations manuelles</li>
+        <li>Auth intégrée pour le login web</li>
+      </ul>
+    </div>
+
+    <div style="background:#1a1a0d;border:1px solid #f0a500;border-radius:8px;padding:14px">
+      <div style="color:#f0a500;font-weight:bold;margin-bottom:8px">React Dashboard</div>
+      <ul style="color:#c9d1d9;font-size:13px;margin:0;padding-left:16px;line-height:1.8">
+        <li>Login → Dashboard → Journal</li>
+        <li>Graphiques Recharts (equity curve, etc.)</li>
+        <li>Filtres par paire, période, session</li>
+        <li>Mode responsive (mobile OK)</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<p style="margin-top:20px;color:#8b949e;font-size:13px;text-align:center">
+  Cette architecture te convient ? Réponds dans le terminal pour continuer vers le design du dashboard.
+</p>

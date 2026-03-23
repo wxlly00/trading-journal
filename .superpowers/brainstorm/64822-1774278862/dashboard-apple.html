@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Trading Journal — Apple Style</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #E5E5EA;
+    font-family: -apple-system, 'SF Pro Display', 'Inter', BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .app {
+    display: flex;
+    width: 100%;
+    max-width: 1140px;
+    height: 720px;
+    background: #F2F2F7;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.04),
+      0 8px 24px rgba(0,0,0,0.08),
+      0 32px 64px rgba(0,0,0,0.10);
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 210px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 0.5px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    padding: 28px 12px 20px;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #000;
+    padding: 0 12px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: #000;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: #8E8E93;
+    padding: 0 12px;
+    margin: 12px 0 6px;
+    text-transform: uppercase;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    color: #3C3C43;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 1px;
+    transition: background 0.15s;
+  }
+
+  .nav-item.active {
+    background: rgba(0,0,0,0.06);
+    color: #000;
+    font-weight: 600;
+  }
+
+  .nav-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #34C759;
+    margin-left: auto;
+  }
+
+  .sidebar-bottom { margin-top: auto; }
+
+  .account-card {
+    background: #000;
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    margin: 16px 0;
+  }
+
+  .account-card .ac-label { font-size: 10px; color: #636366; font-weight: 500; margin-bottom: 4px; letter-spacing: 0.04em; }
+  .account-card .ac-value { font-size: 15px; color: #fff; font-weight: 700; letter-spacing: -0.3px; }
+  .account-card .ac-sub { font-size: 11px; color: #48484A; margin-top: 6px; }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #1C1C1E;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #34C759;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #34C759; }
+
+  /* ── Main ── */
+  .main { flex: 1; overflow-y: auto; padding: 28px 24px; }
+
+  /* scrollbar */
+  .main::-webkit-scrollbar { width: 0px; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+    color: #000;
+    flex: 1;
+  }
+
+  /* Segmented control — Apple style */
+  .segmented {
+    display: flex;
+    background: rgba(0,0,0,0.06);
+    border-radius: 9px;
+    padding: 2px;
+    gap: 1px;
+  }
+
+  .seg-btn {
+    padding: 5px 13px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #3C3C43;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .seg-btn.active {
+    background: #fff;
+    color: #000;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 0.5px 1px rgba(0,0,0,0.08);
+  }
+
+  .date-chip {
+    background: #fff;
+    border-radius: 9px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #3C3C43;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  /* ── KPI Cards ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .kpi-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .kpi-card.hero {
+    background: #000;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #8E8E93;
+    letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+
+  .kpi-card.hero .kpi-label { color: #636366; }
+
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #000;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kpi-card.hero .kpi-value { color: #fff; }
+
+  .kpi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #34C759;
+  }
+
+  .kpi-badge.red { color: #FF3B30; }
+  .kpi-badge.gray { color: #8E8E93; font-weight: 400; }
+
+  /* ── Grid ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: #000;
+  }
+
+  .card-action {
+    width: 26px; height: 26px;
+    background: #F2F2F7;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #636366;
+    cursor: pointer;
+  }
+
+  /* Bar Chart */
+  .bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 100px;
+  }
+
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+
+  .bar-fill {
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    background: #000;
+  }
+
+  .bar-fill.muted { background: #E5E5EA; }
+  .bar-fill.active { background: #3C3C43; }
+
+  .bar-lbl {
+    font-size: 10px;
+    color: #8E8E93;
+    font-weight: 500;
+  }
+
+  .bar-lbl.active { color: #000; font-weight: 700; }
+
+  /* Pair stats */
+  .pair-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .pair-row { display: flex; align-items: center; gap: 8px; }
+
+  .pair-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3C3C43;
+    width: 54px;
+    flex-shrink: 0;
+  }
+
+  .track {
+    flex: 1;
+    height: 5px;
+    background: #F2F2F7;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .fill { height: 100%; border-radius: 3px; background: #000; }
+  .fill.neg { background: #FF3B30; opacity: 0.3; }
+
+  .pair-pnl {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    width: 48px;
+    text-align: right;
+    color: #34C759;
+  }
+
+  .pair-pnl.neg { color: #FF3B30; }
+
+  .divider { height: 0.5px; background: #E5E5EA; margin: 10px 0; }
+
+  .pf-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pf-label { font-size: 11px; color: #8E8E93; }
+  .pf-value { font-size: 15px; font-weight: 800; letter-spacing: -0.5px; color: #000; }
+
+  /* Table */
+  .trade-table { width: 100%; border-collapse: collapse; }
+
+  .trade-table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8E8E93;
+    letter-spacing: 0.04em;
+    text-align: left;
+    padding: 0 0 10px;
+    border-bottom: 0.5px solid #E5E5EA;
+    text-transform: uppercase;
+  }
+
+  .trade-table td {
+    padding: 11px 0;
+    border-bottom: 0.5px solid #F2F2F7;
+    font-size: 13px;
+    color: #3C3C43;
+  }
+
+  .trade-table tr:last-child td { border-bottom: none; }
+
+  .symbol { font-weight: 700; color: #000; font-size: 13px; }
+
+  .dir {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .dir.buy { background: rgba(52,199,89,0.12); color: #34C759; }
+  .dir.sell { background: rgba(255,59,48,0.10); color: #FF3B30; }
+
+  .pnl-pos { color: #34C759; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .pnl-neg { color: #FF3B30; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .badge {
+    display: inline-flex;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .badge.win { background: #000; color: #fff; }
+  .badge.loss { background: #F2F2F7; color: #8E8E93; }
+
+  .mono { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">📈</div>
+      TradeLog
+    </div>
+
+    <div class="nav-section-label">Menu</div>
+
+    <div class="nav-item active">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+      <div class="nav-dot"></div>
+    </div>
+
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Journal
+    </div>
+
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Statistiques
+    </div>
+
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Performance
+    </div>
+
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendrier
+    </div>
+
+    <div class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Notes
+    </div>
+
+    <div class="account-card">
+      <div class="ac-label">COMPTE ACTIF</div>
+      <div class="ac-value">XM #123456</div>
+      <div class="ac-sub">Capital : $10 000 · Live</div>
+      <div class="status-pill"><div class="status-dot"></div> EA connecté</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="nav-section-label">Compte</div>
+      <div class="nav-item">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Paramètres
+      </div>
+      <div class="nav-item" style="color:#FF3B30">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Déconnexion
+      </div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="page-title">Dashboard</div>
+      <div class="segmented">
+        <div class="seg-btn">Jour</div>
+        <div class="seg-btn">Semaine</div>
+        <div class="seg-btn active">Mois</div>
+        <div class="seg-btn">Année</div>
+      </div>
+      <div class="date-chip">📅 1–23 Mars 2026</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-card hero">
+        <div class="kpi-label">P&L Total</div>
+        <div class="kpi-value">+$842</div>
+        <div class="kpi-badge">↑ 8.4% ce mois</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value">64.2%</div>
+        <div class="kpi-badge">↑ vs mois dernier</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">R:R Moyen</div>
+        <div class="kpi-value">1:2.3</div>
+        <div class="kpi-badge gray">89 trades</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Drawdown Max</div>
+        <div class="kpi-value">-4.7%</div>
+        <div class="kpi-badge red">↓ pic 12 mars</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">P&L par semaine</div>
+          <div class="card-action">↗</div>
+        </div>
+        <div class="bars">
+          <div class="bar-col">
+            <div class="bar-fill" style="height:60px"></div>
+            <div class="bar-lbl">S1</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-fill" style="height:42px"></div>
+            <div class="bar-lbl">S2</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-fill active" style="height:92px"></div>
+            <div class="bar-lbl active">S3</div>
+          </div>
+          <div class="bar-col">
+            <div class="bar-fill muted" style="height:28px"></div>
+            <div class="bar-lbl">S4</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Par paire</div>
+        </div>
+        <div class="pair-list">
+          <div class="pair-row">
+            <span class="pair-name">XAUUSD</span>
+            <div class="track"><div class="fill" style="width:80%"></div></div>
+            <span class="pair-pnl">+$520</span>
+          </div>
+          <div class="pair-row">
+            <span class="pair-name">USDJPY</span>
+            <div class="track"><div class="fill" style="width:48%"></div></div>
+            <span class="pair-pnl">+$224</span>
+          </div>
+          <div class="pair-row">
+            <span class="pair-name">EURUSD</span>
+            <div class="track"><div class="fill" style="width:35%"></div></div>
+            <span class="pair-pnl">+$210</span>
+          </div>
+          <div class="pair-row">
+            <span class="pair-name">GBPUSD</span>
+            <div class="track"><div class="fill neg" style="width:30%"></div></div>
+            <span class="pair-pnl neg">-$112</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="pf-row">
+          <span class="pf-label">Profit Factor</span>
+          <span class="pf-value">1.84</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Derniers trades</div>
+        <div style="display:flex;gap:8px">
+          <div class="card-action">↻</div>
+          <div class="card-action">↗</div>
+        </div>
+      </div>
+      <table class="trade-table">
+        <thead>
+          <tr>
+            <th>Paire</th>
+            <th>Direction</th>
+            <th>Entrée</th>
+            <th>Sortie</th>
+            <th>Lots</th>
+            <th>P&L</th>
+            <th>R:R</th>
+            <th>Durée</th>
+            <th>Résultat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="symbol">XAUUSD</span></td>
+            <td><span class="dir buy">BUY</span></td>
+            <td class="mono">2 024.01</td>
+            <td class="mono">2 024.38</td>
+            <td class="mono">0.10</td>
+            <td class="pnl-pos mono">+$33.70</td>
+            <td class="mono">1:2.1</td>
+            <td>2h 14m</td>
+            <td><span class="badge win">WIN</span></td>
+          </tr>
+          <tr>
+            <td><span class="symbol">EURUSD</span></td>
+            <td><span class="dir sell">SELL</span></td>
+            <td class="mono">1.0892</td>
+            <td class="mono">1.0901</td>
+            <td class="mono">0.20</td>
+            <td class="pnl-neg mono">−$18.00</td>
+            <td class="mono">1:0.5</td>
+            <td>45m</td>
+            <td><span class="badge loss">LOSS</span></td>
+          </tr>
+          <tr>
+            <td><span class="symbol">GBPUSD</span></td>
+            <td><span class="dir buy">BUY</span></td>
+            <td class="mono">1.2741</td>
+            <td class="mono">1.2798</td>
+            <td class="mono">0.15</td>
+            <td class="pnl-pos mono">+$85.50</td>
+            <td class="mono">1:3.0</td>
+            <td>5h 30m</td>
+            <td><span class="badge win">WIN</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
