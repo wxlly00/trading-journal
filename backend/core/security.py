@@ -18,14 +18,12 @@ def generate_api_key() -> tuple[str, str]:
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(bearer)) -> dict:
     token = credentials.credentials
     try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated"
-        )
-        return payload
-    except JWTError:
+        db = get_client()
+        user = db.auth.get_user(token)
+        if not user or not user.user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {"sub": user.user.id, "email": user.user.email}
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def verify_api_key(x_api_key: str = Header(...)) -> dict:

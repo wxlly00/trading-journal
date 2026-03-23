@@ -281,7 +281,8 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
     }
   }
 
-  const initialData = drawing?.data
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const initialData: any = drawing?.data
     ? {
         elements: (drawing.data as { elements?: unknown[] }).elements ?? [],
         appState: (drawing.data as { appState?: Record<string, unknown> }).appState ?? {},
@@ -322,8 +323,9 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
               </div>
             }
           >
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <ExcalidrawComponent
-              ref={excalidrawRef}
+              {...({ ref: excalidrawRef } as any)}
               initialData={initialData}
             />
           </Suspense>
