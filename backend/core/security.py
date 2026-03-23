@@ -1,6 +1,6 @@
 import hashlib
 import secrets
-from jose import jwt, JWTError
+import httpx
 from fastapi import HTTPException, Security, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from core.config import settings
@@ -18,11 +18,21 @@ def generate_api_key() -> tuple[str, str]:
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(bearer)) -> dict:
     token = credentials.credentials
     try:
-        db = get_client()
-        user = db.auth.get_user(token)
-        if not user or not user.user:
+        async with httpx.AsyncClient() as client:
+            r = await client.get(
+                f"{settings.supabase_url}/auth/v1/user",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "apikey": settings.supabase_service_role_key,
+                },
+                timeout=10,
+            )
+        if r.status_code != 200:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"sub": user.user.id, "email": user.user.email}
+        data = r.json()
+        return {"sub": data["id"], "email": data.get("email", "")}
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
