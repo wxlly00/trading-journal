@@ -175,11 +175,11 @@ export default function Calendar() {
       {/* Calendar card */}
       <div className="bg-card rounded-2xl overflow-hidden">
         {/* Weekday headers */}
-        <div className="grid grid-cols-7 border-b border-[#f0f0f0]">
+        <div className="grid grid-cols-7 border-b border-border">
           {WEEKDAY_HEADERS.map((d) => (
             <div
               key={d}
-              className="py-3 text-center text-[11px] font-semibold uppercase tracking-wide text-[#888]"
+              className="py-2 md:py-3 text-center text-[10px] md:text-[11px] font-semibold uppercase tracking-wide text-muted"
             >
               {d}
             </div>
@@ -201,7 +201,7 @@ export default function Calendar() {
         ) : (
           <div>
             {weeks.map((week, wi) => (
-              <div key={wi} className="grid grid-cols-7 border-b border-[#f0f0f0] last:border-b-0">
+              <div key={wi} className="grid grid-cols-7 border-b border-border last:border-b-0">
                 {week.map((day) => {
                   const hasTrade = day.isCurrentMonth && day.data !== null
                   const isPos = hasTrade && day.data!.pnl > 0
@@ -211,9 +211,9 @@ export default function Calendar() {
                     <div
                       key={day.dateStr}
                       className={[
-                        'relative h-12 md:h-20 p-1 md:p-2 border-r border-border last:border-r-0 transition-colors',
-                        day.isCurrentMonth ? 'bg-white' : 'bg-[#fafafa]',
-                        day.isToday ? 'ring-2 ring-inset ring-[#111]' : '',
+                        'relative h-12 md:h-20 p-1 md:p-2 border-r border-border last:border-r-0 overflow-hidden transition-colors',
+                        day.isCurrentMonth ? 'bg-card' : 'bg-surface',
+                        day.isToday ? 'ring-2 ring-inset ring-dark' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
@@ -221,22 +221,18 @@ export default function Calendar() {
                       {/* Day number */}
                       <span
                         className={[
-                          'text-xs font-semibold',
-                          day.isToday
-                            ? 'text-[#111]'
-                            : day.isCurrentMonth
-                            ? 'text-[#111]'
-                            : 'text-[#ccc]',
+                          'text-[10px] md:text-xs font-semibold',
+                          day.isCurrentMonth ? 'text-dark' : 'text-muted opacity-40',
                         ].join(' ')}
                       >
                         {day.dayNum}
                       </span>
 
-                      {/* P&L amount */}
+                      {/* P&L amount — desktop only */}
                       {hasTrade && (
-                        <div className="mt-1">
+                        <div className="mt-1 hidden md:block">
                           <span
-                            className="text-xs font-semibold block leading-tight"
+                            className="text-xs font-semibold block leading-tight truncate"
                             style={{ color: isPos ? '#22c55e' : '#ef4444' }}
                           >
                             {fmtPnl(day.data!.pnl)}
@@ -244,9 +240,16 @@ export default function Calendar() {
                         </div>
                       )}
 
-                      {/* Dot indicator */}
+                      {/* Mobile: colored bottom bar instead of text */}
                       {hasTrade && (
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+                        <div
+                          className={`md:hidden absolute bottom-0 left-0 right-0 h-1 ${isPos ? 'bg-green' : 'bg-red'}`}
+                        />
+                      )}
+
+                      {/* Desktop dot */}
+                      {hasTrade && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 hidden md:block">
                           <div
                             className="w-1.5 h-1.5 rounded-full"
                             style={{ backgroundColor: isPos ? '#22c55e' : isNeg ? '#ef4444' : '#ccc' }}
