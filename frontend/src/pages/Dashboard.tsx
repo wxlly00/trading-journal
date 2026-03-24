@@ -371,6 +371,52 @@ export default function Dashboard() {
         </>
       )}
 
+      {/* Daily goals (today only) */}
+      {period === 'day' && (() => {
+        const target = parseFloat(localStorage.getItem('tj-daily-target') ?? '')
+        const maxLoss = parseFloat(localStorage.getItem('tj-daily-maxloss') ?? '')
+        const pnl = summary?.total_pnl ?? 0
+        if (!target && !maxLoss) return null
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {target > 0 && (
+              <div className="bg-card rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-muted">Objectif du jour</p>
+                  <span className={`text-xs font-bold ${pnl >= target ? 'text-green' : 'text-dark'}`}>
+                    {fmtPnl(pnl)} / {fmtPnl(target)}
+                  </span>
+                </div>
+                <div className="h-2 bg-subtle rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-green transition-all"
+                    style={{ width: `${Math.min((pnl / target) * 100, 100)}%` }}
+                  />
+                </div>
+                {pnl >= target && <p className="text-[10px] text-green font-semibold mt-1">Objectif atteint !</p>}
+              </div>
+            )}
+            {maxLoss > 0 && (
+              <div className="bg-card rounded-2xl p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-semibold text-muted">Perte max / jour</p>
+                  <span className={`text-xs font-bold ${pnl < -maxLoss ? 'text-red' : 'text-dark'}`}>
+                    {fmtPnl(Math.min(pnl, 0))} / -{fmtPnl(maxLoss)}
+                  </span>
+                </div>
+                <div className="h-2 bg-subtle rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-red transition-all"
+                    style={{ width: `${Math.min((Math.abs(Math.min(pnl, 0)) / maxLoss) * 100, 100)}%` }}
+                  />
+                </div>
+                {pnl < -maxLoss && <p className="text-[10px] text-red font-semibold mt-1">Limite atteinte — arrêtez de trader !</p>}
+              </div>
+            )}
+          </div>
+        )
+      })()}
+
       {/* Comparison vs prev period */}
       {showComparison && (
         <div className="flex flex-wrap gap-2 items-center">

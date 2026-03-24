@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 import { Badge } from '../components/ui/Badge'
+import { AddTradeModal } from '../components/ui/AddTradeModal'
 import { fmtPnl, fmtDate, fmtDuration } from '../lib/formatters'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -172,6 +173,7 @@ export default function Journal() {
   const [error, setError] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
 
   // Sort
   const [sortKey, setSortKey] = useState<SortKey>('open_time')
@@ -300,20 +302,40 @@ export default function Journal() {
             {trades.length}{hasMore ? '+' : ''} trades
           </span>
         )}
-        <button
-          onClick={exportCSV}
-          disabled={sorted.length === 0}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card text-muted text-xs font-medium hover:text-dark hover:bg-subtle transition-all disabled:opacity-40"
-          title="Exporter en CSV"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          CSV
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark text-white text-xs font-semibold hover:opacity-80 transition-opacity"
+            title="Ajouter un trade manuellement"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3.5 h-3.5">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Ajouter
+          </button>
+          <button
+            onClick={exportCSV}
+            disabled={sorted.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card text-muted text-xs font-medium hover:text-dark hover:bg-subtle transition-all disabled:opacity-40"
+            title="Exporter en CSV"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            CSV
+          </button>
+        </div>
       </div>
+
+      {addOpen && activeAccountId && (
+        <AddTradeModal
+          accountId={activeAccountId}
+          onClose={() => setAddOpen(false)}
+          onSuccess={() => { setOffset(0); setTrades([]); fetchTrades(0, false) }}
+        />
+      )}
 
       {/* Filters */}
       <div className="bg-card rounded-2xl p-4 space-y-3">

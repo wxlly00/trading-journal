@@ -72,6 +72,12 @@ export default function TradeDetail() {
   const [psyScore, setPsyScore] = useState<number | null>(null)
   const [psySaving, setPsySaving] = useState(false)
 
+  // SL/TP editing
+  const [slValue, setSlValue] = useState('')
+  const [tpValue, setTpValue] = useState('')
+  const [slTpSaving, setSlTpSaving] = useState(false)
+  const [slTpSaved, setSlTpSaved] = useState(false)
+
   // Screenshot upload
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
@@ -89,6 +95,8 @@ export default function TradeDetail() {
       setTag(data.tags?.[0] ?? data.tag ?? null)
       setPsyScore(data.psy_score ?? null)
       setScreenshotUrl(data.screenshot_url ?? null)
+      setSlValue(data.sl != null ? String(data.sl) : '')
+      setTpValue(data.tp != null ? String(data.tp) : '')
       lastSavedNote.current = data.note ?? ''
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Trade introuvable')
@@ -135,6 +143,29 @@ export default function TradeDetail() {
       setPsyScore(psyScore) // revert
     } finally {
       setPsySaving(false)
+    }
+  }
+
+  // ── SL/TP save ────────────────────────────────────────────────────────────────
+
+  async function handleSlTpSave() {
+    if (!trade) return
+    setSlTpSaving(true)
+    setSlTpSaved(false)
+    try {
+      const payload: Record<string, number | null> = {}
+      payload.sl = slValue ? parseFloat(slValue) : null
+      payload.tp = tpValue ? parseFloat(tpValue) : null
+      await api.patch<{ ok: boolean }>(`/api/trades/${trade.id}`, payload)
+      // Refresh trade to get recalculated rr_realized
+      const updated = await api.get<Trade>(`/api/trades/${trade.id}`)
+      setTrade(updated)
+      setSlTpSaved(true)
+      setTimeout(() => setSlTpSaved(false), 2000)
+    } catch {
+      // ignore
+    } finally {
+      setSlTpSaving(false)
     }
   }
 
@@ -303,8 +334,38 @@ export default function TradeDetail() {
 
           <InfoRow label="Prix d'ouverture" value={fmtPrice(trade.open_price)} />
           <InfoRow label="Prix de cloture" value={fmtPrice(trade.close_price)} />
-          <InfoRow label="Stop Loss" value={trade.sl != null ? fmtPrice(trade.sl) : '—'} />
-          <InfoRow label="Take Profit" value={trade.tp != null ? fmtPrice(trade.tp) : '—'} />
+          {/* SL/TP editable */}
+          <div className="py-2 border-b border-subtle">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[#999] font-medium">Stop Loss / Take Profit</span>
+              <button
+                onClick={handleSlTpSave}
+                disabled={slTpSaving}
+                className="text-[11px] font-semibold text-dark hover:opacity-70 transition-opacity disabled:opacity-40"
+              >
+                {slTpSaving ? 'Enregistrement...' : slTpSaved ? '✓ Sauvegardé' : 'Enregistrer'}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.00001"
+                placeholder="Stop Loss"
+                value={slValue}
+                onChange={(e) => setSlValue(e.target.value)}
+                className="flex-1 bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-dark outline-none focus:ring-1 focus:ring-dark/20"
+              />
+              <input
+                type="number"
+                step="0.00001"
+                placeholder="Take Profit"
+                value={tpValue}
+                onChange={(e) => setTpValue(e.target.value)}
+                className="flex-1 bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-dark outline-none focus:ring-1 focus:ring-dark/20"
+              />
+            </div>
+            {slValue && <p className="text-[10px] text-muted mt-1">Le R:R sera recalculé automatiquement</p>}
+          </div>
           <InfoRow label="Volume (lots)" value={trade.lots.toString()} />
           <InfoRow label="Duree" value={fmtDuration(trade.duration_min)} />
           <InfoRow label="Session" value={sessionLabel} />

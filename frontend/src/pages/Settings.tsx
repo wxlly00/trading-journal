@@ -137,6 +137,20 @@ export default function Settings() {
   // URL copy
   const [urlCopied, setUrlCopied] = useState(false)
 
+  // Daily goals (localStorage)
+  const [dailyTarget, setDailyTarget] = useState(() => localStorage.getItem('tj-daily-target') ?? '')
+  const [dailyMaxLoss, setDailyMaxLoss] = useState(() => localStorage.getItem('tj-daily-maxloss') ?? '')
+  const [goalsSaved, setGoalsSaved] = useState(false)
+
+  function handleSaveGoals() {
+    if (dailyTarget) localStorage.setItem('tj-daily-target', dailyTarget)
+    else localStorage.removeItem('tj-daily-target')
+    if (dailyMaxLoss) localStorage.setItem('tj-daily-maxloss', dailyMaxLoss)
+    else localStorage.removeItem('tj-daily-maxloss')
+    setGoalsSaved(true)
+    setTimeout(() => setGoalsSaved(false), 2000)
+  }
+
   // Load accounts
   useEffect(() => {
     api.get<Account[]>('/api/accounts')
@@ -703,6 +717,53 @@ export default function Settings() {
             )}
           </div>
         )}
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* SECTION: Objectifs journaliers */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <SectionTitle>Objectifs journaliers</SectionTitle>
+        <Card>
+          <p className="text-xs text-muted mb-4">Définissez vos objectifs quotidiens. Ils s'afficheront sur le Dashboard.</p>
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div>
+              <label className="text-xs font-semibold text-muted block mb-1.5">Profit cible / jour ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Ex: 100"
+                value={dailyTarget}
+                onChange={(e) => setDailyTarget(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-subtle bg-surface text-sm text-dark outline-none focus:border-dark transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-muted block mb-1.5">Perte max / jour ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="Ex: 50"
+                value={dailyMaxLoss}
+                onChange={(e) => setDailyMaxLoss(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-subtle bg-surface text-sm text-dark outline-none focus:border-dark transition-colors"
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleSaveGoals}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark text-white text-sm font-semibold hover:opacity-80 transition-opacity"
+          >
+            {goalsSaved ? (
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><polyline points="20 6 9 17 4 12"/></svg>
+                Sauvegardé
+              </>
+            ) : 'Enregistrer les objectifs'}
+          </button>
+        </Card>
       </section>
 
       {/* ------------------------------------------------------------------ */}

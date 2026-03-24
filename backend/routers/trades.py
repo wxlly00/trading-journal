@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from core.security import get_current_user, verify_api_key
 from db.supabase import get_client
-from services.calculator import enrich_trade
+from services.calculator import enrich_trade, calc_rr
 from services.storage import upload_screenshot
 
 router = APIRouter(prefix="/api/trades", tags=["trades"])
@@ -32,6 +32,37 @@ async def ingest_trade(payload: dict, account: dict = Depends(verify_api_key)):
         pass
 
     return {"ok": True}
+
+
+@router.post("/create")
+async def create_trade(payload: dict, user: dict = Depends(get_current_user)):
+    db = get_client()
+
+    account_id = payload.get("account_id")
+    if not account_id:
+        raise HTTPException(400, "account_id requis")
+
+    acc = db.table("accounts").select("id").eq("id", account_id).eq("user_id", user["sub"]).execute()
+    if not acc.data:
+        raise HTTPException(403, "Compte introuvable")
+
+    allowed = [
+        "account_id", "symbol", "type", "open_time", "close_time",
+        "open_price", "close_price", "volume", "profit", "commission",
+        "swap", "sl", "tp", "status", "note",
+    ]
+    data: dict = {k: payload[k] for k in allowed if k in payload}
+    data["user_id"] = user["sub"]
+    data["account_id"] = account_id
+    data = enrich_trade(data)
+
+    result = db.table("trades").insert(data).execute()
+    if not result.data:
+        raise HTTPException(500, "Échec de la création")
+
+    trade = result.data[0]
+    trade.setdefault("lots", trade.get("volume"))
+    return trade
 
 
 @router.get("")
@@ -94,9 +125,26 @@ async def update_trade(trade_id: str, payload: dict, user: dict = Depends(get_cu
         data["psy_score"] = payload["psy_score"]
     if "tags" in payload:
         data["tags"] = payload["tags"]
-    # Frontend sends tag (singular string) → store as tags array
     if "tag" in payload:
         data["tags"] = [payload["tag"]] if payload["tag"] else []
+    if "sl" in payload:
+        data["sl"] = payload["sl"]
+    if "tp" in payload:
+        data["tp"] = payload["tp"]
+
+    # Recalculate R:R when SL is updated
+    if "sl" in payload and payload["sl"] is not None:
+        r = db.table("trades").select("type, open_price, close_price").eq("id", trade_id).eq("user_id", user["sub"]).execute()
+        if r.data:
+            t = r.data[0]
+            if t.get("open_price") and t.get("close_price"):
+                data["rr_realized"] = calc_rr(
+                    t.get("type", "buy"),
+                    float(t["open_price"]),
+                    float(t["close_price"]),
+                    float(payload["sl"]),
+                )
+
     if data:
         db.table("trades").update(data).eq("id", trade_id).eq("user_id", user["sub"]).execute()
     return {"ok": True}
@@ -118,20 +166,17 @@ def _parse_mt5_csv(content: str) -> list[dict]:
     if not lines:
         return []
 
-    # Detect delimiter
     delim = '\t' if '\t' in lines[0] else (';' if ';' in lines[0] else ',')
     reader = csv.DictReader(lines, delimiter=delim)
 
     deals: list[dict] = []
     for row in reader:
         row = {k.strip().lower(): v.strip() for k, v in row.items() if k}
-        # Skip balance/credit entries
         t = row.get('type', row.get('deal type', '')).lower()
         if t in ('balance', 'credit', 'deposit', 'withdrawal', ''):
             continue
         deals.append(row)
 
-    # Pair in/out deals by order/position
     positions: dict[str, dict] = {}
     trades: list[dict] = []
 
@@ -168,7 +213,6 @@ def _parse_mt5_csv(content: str) -> list[dict]:
                 }
                 trades.append(enrich_trade(trade))
             else:
-                # No matching open — create standalone closed trade
                 trades.append(enrich_trade({
                     'ticket': ticket, 'symbol': symbol, 'type': trade_type,
                     'volume': volume, 'open_price': price, 'close_price': price,
@@ -177,7 +221,6 @@ def _parse_mt5_csv(content: str) -> list[dict]:
                     'sl': sl or None, 'tp': tp or None, 'status': 'closed',
                 }))
 
-    # Unclosed positions → open trades
     for pos in positions.values():
         trades.append(pos)
 
@@ -191,7 +234,6 @@ async def import_trades(
     user: dict = Depends(get_current_user),
 ):
     db = get_client()
-    # Verify account belongs to user
     acc = db.table("accounts").select("id").eq("id", account_id).eq("user_id", user["sub"]).execute()
     if not acc.data:
         raise HTTPException(403, "Compte non trouvé")
