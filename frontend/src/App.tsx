@@ -18,7 +18,8 @@ const Settings = lazy(() => import('./pages/Settings'))
 const Calculator = lazy(() => import('./pages/Calculator'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session } = useAuthStore()
+  const { session, initialized } = useAuthStore()
+  if (!initialized) return <Spinner />
   if (!session) return <Navigate to="/login" replace />
   return <>{children}</>
 }
