@@ -1,4 +1,4 @@
-import { useEffect, useState, lazy, Suspense, useRef } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 
@@ -266,15 +266,15 @@ interface DrawingModalProps {
 
 function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const excalidrawRef = useRef<any>(null)
+  const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null)
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (!excalidrawRef.current) return
+    if (!excalidrawAPI) return
     setSaving(true)
     try {
-      const elements = excalidrawRef.current.getSceneElements()
-      const appState = excalidrawRef.current.getAppState()
+      const elements = excalidrawAPI.getSceneElements()
+      const appState = excalidrawAPI.getAppState()
       await onSave({ elements, appState })
     } finally {
       setSaving(false)
@@ -298,7 +298,7 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !excalidrawAPI}
               className="px-4 py-2 rounded-xl bg-dark text-white text-sm font-semibold hover:bg-[#333] transition-colors disabled:opacity-50"
             >
               {saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -325,7 +325,7 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
           >
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <ExcalidrawComponent
-              {...({ ref: excalidrawRef } as any)}
+              excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
               initialData={initialData}
             />
           </Suspense>
