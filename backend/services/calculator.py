@@ -35,19 +35,38 @@ def calc_rr(type_: str, open_price: float, close_price: float, sl: float) -> flo
 def calc_duration(open_time: datetime, close_time: datetime) -> int:
     return int((close_time - open_time).total_seconds() / 60)
 
+def _parse_dt(s: str) -> datetime | None:
+    """Parse ISO or MT5 datetime string to datetime."""
+    if not s:
+        return None
+    s = s.strip().rstrip("Z").replace("Z", "")
+    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y.%m.%d %H:%M:%S", "%Y.%m.%d %H:%M"):
+        try:
+            return datetime.strptime(s, fmt).replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+    try:
+        return datetime.fromisoformat(s).replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 def enrich_trade(data: dict) -> dict:
     profit = data.get("profit", 0) or 0
     commission = data.get("commission", 0) or 0
     swap = data.get("swap", 0) or 0
     data["pnl_net"] = round(profit + commission + swap, 2)
 
-    if data.get("open_time"):
-        ot = datetime.fromisoformat(data["open_time"].replace("Z", "+00:00"))
+    ot = _parse_dt(data.get("open_time", ""))
+    if ot:
+        data["open_time"] = ot.isoformat()
         data["session"] = get_session(ot)
 
-    if data.get("close_time") and data.get("open_time"):
-        ct = datetime.fromisoformat(data["close_time"].replace("Z", "+00:00"))
-        ot = datetime.fromisoformat(data["open_time"].replace("Z", "+00:00"))
+    ct = _parse_dt(data.get("close_time", ""))
+    if ct:
+        data["close_time"] = ct.isoformat()
+
+    if ot and ct:
         data["duration_min"] = calc_duration(ot, ct)
 
     if data.get("close_price") and data.get("open_price") and data.get("sl"):
