@@ -1,9 +1,14 @@
 import os
+import time
 from fastapi import APIRouter, Depends, HTTPException
 from core.security import get_current_user
 from db.supabase import get_client
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
+
+# Simple in-memory rate limit: 1 analysis per user per 60s
+_last_call: dict[str, float] = {}
+_COOLDOWN = 60  # seconds
 
 
 @router.post("/analyze")
@@ -11,6 +16,14 @@ async def analyze_trades(user: dict = Depends(get_current_user)):
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not api_key:
         raise HTTPException(503, "Clé API Anthropic non configurée")
+
+    # Rate limiting
+    uid = user["sub"]
+    now = time.time()
+    if uid in _last_call and now - _last_call[uid] < _COOLDOWN:
+        wait = int(_COOLDOWN - (now - _last_call[uid]))
+        raise HTTPException(429, f"Attendez {wait}s avant de relancer une analyse")
+    _last_call[uid] = now
 
     db = get_client()
     acc_res = db.table("accounts").select("id").eq("user_id", user["sub"]).execute()

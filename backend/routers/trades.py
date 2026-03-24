@@ -11,10 +11,19 @@ from services.storage import upload_screenshot
 router = APIRouter(prefix="/api/trades", tags=["trades"])
 
 
+_INGEST_ALLOWED = {
+    "ticket", "symbol", "type", "open_time", "close_time",
+    "open_price", "close_price", "volume", "profit", "commission",
+    "swap", "sl", "tp", "status", "magic", "comment",
+}
+
 @router.post("/ingest")
 async def ingest_trade(payload: dict, account: dict = Depends(verify_api_key)):
     db = get_client()
-    data = {**payload, "account_id": account["id"], "user_id": account["user_id"]}
+    # Allowlist fields to prevent mass-assignment from rogue EA scripts
+    data = {k: payload[k] for k in _INGEST_ALLOWED if k in payload}
+    data["account_id"] = account["id"]
+    data["user_id"] = account["user_id"]
     if data.get("status") == "closed":
         data = enrich_trade(data)
 
@@ -108,6 +117,11 @@ async def list_trades(
 async def search_trades(q: str = "", user: dict = Depends(get_current_user)):
     if not q or len(q) < 2:
         return []
+    # Sanitize: alphanumeric + space + common FX chars only (prevents PostgREST injection)
+    import re
+    q_safe = re.sub(r"[^a-zA-Z0-9 _/\-]", "", q)[:50]
+    if not q_safe:
+        return []
     db = get_client()
     acc_res = db.table("accounts").select("id").eq("user_id", user["sub"]).execute()
     account_ids = [a["id"] for a in acc_res.data]
@@ -117,7 +131,7 @@ async def search_trades(q: str = "", user: dict = Depends(get_current_user)):
         db.table("trades")
         .select("id,symbol,type,profit,open_time,account_id")
         .in_("account_id", account_ids)
-        .or_(f"symbol.ilike.%{q}%,note.ilike.%{q}%")
+        .or_(f"symbol.ilike.%{q_safe}%,note.ilike.%{q_safe}%")
         .order("open_time", desc=True)
         .limit(20)
         .execute()
