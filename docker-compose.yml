@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+
+  # ── Backend FastAPI ──────────────────────────────────────────
+  backend:
+    build: ./backend
+    env_file: .env
+    restart: unless-stopped
+    # Port exposé uniquement si tu veux accéder à l'API directement
+    # ports:
+    #   - "8000:8000"
+
+  # ── Frontend React (nginx) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
