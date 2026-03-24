@@ -82,9 +82,18 @@ async def get_trade(trade_id: str, user: dict = Depends(get_current_user)):
 @router.patch("/{trade_id}")
 async def update_trade(trade_id: str, payload: dict, user: dict = Depends(get_current_user)):
     db = get_client()
-    allowed = {"note", "tags", "psy_score"}
-    data = {k: v for k, v in payload.items() if k in allowed}
-    db.table("trades").update(data).eq("id", trade_id).eq("user_id", user["sub"]).execute()
+    data = {}
+    if "note" in payload:
+        data["note"] = payload["note"]
+    if "psy_score" in payload:
+        data["psy_score"] = payload["psy_score"]
+    if "tags" in payload:
+        data["tags"] = payload["tags"]
+    # Frontend sends tag (singular string) → store as tags array
+    if "tag" in payload:
+        data["tags"] = [payload["tag"]] if payload["tag"] else []
+    if data:
+        db.table("trades").update(data).eq("id", trade_id).eq("user_id", user["sub"]).execute()
     return {"ok": True}
 
 

@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import datetime
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from core.security import get_current_user
 from db.supabase import get_client
 from services.calculator import calc_equity_curve, calc_sharpe
@@ -8,14 +8,24 @@ from services.calculator import calc_equity_curve, calc_sharpe
 router = APIRouter(prefix="/api/stats", tags=["stats"])
 
 
-def _closed_trades(db, account_id: str, user_id: str) -> list[dict]:
-    return db.table("trades").select("*").eq("account_id", account_id).eq("user_id", user_id).eq("status", "closed").execute().data
+def _closed_trades(db, account_id: str, user_id: str, from_: str | None = None, to: str | None = None) -> list[dict]:
+    q = db.table("trades").select("*").eq("account_id", account_id).eq("user_id", user_id).eq("status", "closed")
+    if from_:
+        q = q.gte("close_time", from_)
+    if to:
+        q = q.lte("close_time", to)
+    return q.execute().data
 
 
 @router.get("/summary")
-async def summary(account_id: str, user: dict = Depends(get_current_user)):
+async def summary(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
+    trades = _closed_trades(db, account_id, user["sub"], from_, to)
     if not trades:
         return {"trades_count": 0}
 
@@ -60,9 +70,14 @@ async def summary(account_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/by-symbol")
-async def by_symbol(account_id: str, user: dict = Depends(get_current_user)):
+async def by_symbol(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
+    trades = _closed_trades(db, account_id, user["sub"], from_, to)
     data: dict = defaultdict(lambda: {"pnl": 0.0, "wins": 0, "total": 0})
     for t in trades:
         s = t.get("symbol", "UNKNOWN")
@@ -78,9 +93,14 @@ async def by_symbol(account_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/by-session")
-async def by_session(account_id: str, user: dict = Depends(get_current_user)):
+async def by_session(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
+    trades = _closed_trades(db, account_id, user["sub"], from_, to)
     data: dict = defaultdict(lambda: {"pnl": 0.0, "wins": 0, "total": 0})
     for t in trades:
         s = t.get("session") or "off"
@@ -92,18 +112,28 @@ async def by_session(account_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/equity-curve")
-async def equity_curve(account_id: str, user: dict = Depends(get_current_user)):
+async def equity_curve(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
+    trades = _closed_trades(db, account_id, user["sub"], from_, to)
     acc = db.table("accounts").select("initial_capital").eq("id", account_id).execute()
     capital = float(acc.data[0]["initial_capital"]) if acc.data else 10000.0
     return calc_equity_curve(trades, capital)
 
 
 @router.get("/heatmap")
-async def heatmap(account_id: str, user: dict = Depends(get_current_user)):
+async def heatmap(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
+    trades = _closed_trades(db, account_id, user["sub"], from_, to)
     data: dict = defaultdict(lambda: {"pnl": 0.0, "count": 0})
     for t in trades:
         if t.get("open_time"):
@@ -129,9 +159,14 @@ async def calendar(account_id: str, month: str | None = None, user: dict = Depen
 
 
 @router.get("/streaks")
-async def streaks(account_id: str, user: dict = Depends(get_current_user)):
+async def streaks(
+    account_id: str,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    user: dict = Depends(get_current_user),
+):
     db = get_client()
-    trades = sorted(_closed_trades(db, account_id, user["sub"]), key=lambda x: x.get("close_time") or "")
+    trades = sorted(_closed_trades(db, account_id, user["sub"], from_, to), key=lambda x: x.get("close_time") or "")
     max_win = cur_win = max_loss = cur_loss = 0
     for t in trades:
         if (t.get("pnl_net") or 0) > 0:

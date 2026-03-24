@@ -17,7 +17,11 @@ async def list_notes(date: str | None = None, user: dict = Depends(get_current_u
 @router.post("")
 async def create_note(payload: dict, user: dict = Depends(get_current_user)):
     db = get_client()
-    data = {**payload, "user_id": user["sub"]}
+    data = {
+        "date": payload["date"],
+        "content": payload.get("content", ""),
+        "user_id": user["sub"],
+    }
     r = db.table("notes").upsert(data, on_conflict="user_id,date").execute()
     return r.data[0]
 
@@ -25,8 +29,8 @@ async def create_note(payload: dict, user: dict = Depends(get_current_user)):
 @router.patch("/{note_id}")
 async def update_note(note_id: str, payload: dict, user: dict = Depends(get_current_user)):
     db = get_client()
-    db.table("notes").update({"content": payload.get("content")}).eq("id", note_id).eq("user_id", user["sub"]).execute()
-    return {"ok": True}
+    r = db.table("notes").update({"content": payload.get("content")}).eq("id", note_id).eq("user_id", user["sub"]).execute()
+    return r.data[0] if r.data else {"ok": True}
 
 
 @router.delete("/{note_id}")

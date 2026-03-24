@@ -1,6 +1,6 @@
 # Trading Journal — Spec Design
 **Date :** 2026-03-23
-**Révision :** v2 (post-review)
+**Révision :** v4 (+ Playbook feature)
 **Statut :** En attente d'approbation finale
 
 ---
@@ -399,6 +399,49 @@ Live/Active         : #34C759
 ---
 
 ## 8. Features
+
+### Playbook (nouveau)
+
+**Entrées d'apprentissage**
+- Éditeur texte avec markdown (textarea + preview)
+- Champs : titre, contenu, catégorie (`risk` | `psychology` | `strategy` | `setup` | `autre`), tags libres
+- Filtrage par catégorie + recherche full-text
+
+**Canvas de dessin (Excalidraw)**
+- Composant Excalidraw intégré dans React (`@excalidraw/excalidraw`)
+- Sauvegarde l'état JSON (elements + appState) en JSONB dans Supabase
+- Chaque dessin a un titre, une date, des tags
+- Export PNG depuis le canvas (API Excalidraw native)
+- Usage : schématiser des setups, patterns de prix, notes visuelles
+
+**Tables :**
+
+`learning_entries`
+```sql
+id          UUID PK, user_id UUID FK auth.users, title VARCHAR(200),
+content     TEXT, category VARCHAR(20), tags TEXT[],
+created_at  TIMESTAMPTZ, updated_at TIMESTAMPTZ
+```
+
+`drawings`
+```sql
+id          UUID PK, user_id UUID FK auth.users, title VARCHAR(200),
+elements    JSONB NOT NULL DEFAULT '[]',
+app_state   JSONB NOT NULL DEFAULT '{}',
+tags        TEXT[],
+created_at  TIMESTAMPTZ, updated_at TIMESTAMPTZ
+```
+
+**API endpoints :**
+- `GET/POST /api/learning` — liste + création
+- `PATCH/DELETE /api/learning/{id}` — édition/suppression
+- `GET/POST /api/drawings` — liste + création
+- `PATCH/DELETE /api/drawings/{id}` — édition/suppression
+
+**Page frontend : `/playbook`**
+- Deux onglets : Apprentissages | Dessins
+- Apprentissages : liste + éditeur markdown
+- Dessins : grille de miniatures + éditeur Excalidraw plein écran
 
 ### Auto-sync MT5
 - EA push HTTPS temps réel sur chaque `DEAL_ADD`

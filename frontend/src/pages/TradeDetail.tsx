@@ -25,6 +25,7 @@ interface Trade {
   status: string
   note: string | null
   tag: string | null
+  tags: string[] | null
   screenshot_url?: string | null
 }
 
@@ -80,7 +81,7 @@ export default function TradeDetail() {
       const data = await api.get<Trade>(`/api/trades/${id}${qs}`)
       setTrade(data)
       setNote(data.note ?? '')
-      setTag(data.tag ?? null)
+      setTag(data.tags?.[0] ?? data.tag ?? null)
       setScreenshotUrl(data.screenshot_url ?? null)
       lastSavedNote.current = data.note ?? ''
     } catch (e) {
@@ -131,7 +132,7 @@ export default function TradeDetail() {
 
   // ── Screenshot upload ────────────────────────────────────────────────────────
 
-  function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleScreenshotChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
@@ -146,9 +147,18 @@ export default function TradeDetail() {
     }
 
     setUploadError(null)
-    const url = URL.createObjectURL(file)
-    setScreenshotUrl(url)
-    // In a real implementation you'd upload to storage and patch the trade record.
+    // Optimistic preview
+    const localUrl = URL.createObjectURL(file)
+    setScreenshotUrl(localUrl)
+
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      const result = await api.postForm<{ url: string }>(`/api/trades/${trade!.id}/screenshot`, form)
+      setScreenshotUrl(result.url)
+    } catch {
+      setUploadError("Erreur lors de l'upload du screenshot.")
+    }
   }
 
   // ── Loading ──────────────────────────────────────────────────────────────────

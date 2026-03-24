@@ -253,6 +253,7 @@ export default function Dashboard() {
               label="P&L Total"
               value={fmtPnl(summary?.total_pnl ?? null)}
               change={summary ? `${summary.trades_count} trades` : undefined}
+              valuePositive={summary ? summary.total_pnl >= 0 : undefined}
             />
             <KpiCard
               label="Win Rate"
