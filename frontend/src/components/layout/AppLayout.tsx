@@ -124,7 +124,7 @@ export function AppLayout() {
   )
 
   return (
-    <div className="flex flex-col md:flex-row h-screen md:max-w-[1280px] md:mx-auto md:my-5 md:rounded-2xl md:overflow-hidden md:shadow-[0_8px_40px_rgba(0,0,0,0.10)]">
+    <div className="flex flex-col md:flex-row h-dvh md:max-w-[1280px] md:mx-auto md:my-5 md:rounded-2xl md:overflow-hidden md:shadow-[0_8px_40px_rgba(0,0,0,0.10)]">
 
       {/* ── DESKTOP SIDEBAR ─────────────────────────────────── */}
       <aside className="hidden md:flex w-52 bg-card flex-col py-6 px-4 flex-shrink-0">
@@ -213,7 +213,9 @@ export function AppLayout() {
       </aside>
 
       {/* ── MOBILE TOP BAR ─────────────────────────────────────── */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 bg-card border-b border-border flex-shrink-0">
+      {/* safe-top : compense la status bar en mode PWA standalone */}
+      <header className="md:hidden bg-card border-b border-border flex-shrink-0 safe-top">
+        <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
             <rect x="2" y="12" width="4" height="10" rx="1" fill="currentColor" className="text-dark"/>
@@ -243,10 +245,11 @@ export function AppLayout() {
             )}
           </button>
         </div>
+        </div>
       </header>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
-      <main className="flex-1 bg-surface overflow-y-auto pb-20 md:pb-0">
+      <main className="flex-1 bg-surface overflow-y-auto pb-safe-nav md:pb-0">
         <Outlet />
       </main>
 

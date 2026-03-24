@@ -24,10 +24,22 @@ html.dark {
 
 * { box-sizing: border-box; }
 
+html, body {
+  height: 100%;
+  overscroll-behavior: none; /* pas de rubber-band dans la PWA */
+}
+
 body {
   background: var(--c-surface);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Empêche le zoom iOS sur les inputs (font-size < 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────── */
@@ -35,9 +47,21 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--c-subtle); border-radius: 2px; }
 
-/* ── Safe area for iPhone bottom tab ──────────────────────────── */
+/* ── Safe areas ────────────────────────────────────────────────── */
+
+/* Top : status bar (PWA avec black-translucent) */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Bottom : home indicator */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Padding bas du contenu principal = hauteur de la bottom nav + home indicator */
+.pb-safe-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
 }
 
 /* ── Toast slide-up animation ─────────────────────────────────── */
