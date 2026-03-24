@@ -330,23 +330,25 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        {loading ? (
-          <>
-            <KpiSkeleton dark />
-            <KpiSkeleton />
-            <KpiSkeleton />
-            <KpiSkeleton />
-          </>
-        ) : (
-          <>
-            <KpiCard
-              dark
-              label="P&L Total"
-              value={fmtPnl(summary?.total_pnl ?? null)}
-              change={summary ? `${summary.trades_count} trades` : undefined}
-              valuePositive={summary ? summary.total_pnl >= 0 : undefined}
-            />
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <KpiSkeleton dark />
+          <KpiSkeleton />
+          <KpiSkeleton />
+          <KpiSkeleton />
+        </div>
+      ) : (
+        <>
+          {/* P&L — full width on mobile */}
+          <KpiCard
+            dark
+            label="P&L Total"
+            value={fmtPnl(summary?.total_pnl ?? null)}
+            change={summary ? `${summary.trades_count} trades` : undefined}
+            valuePositive={summary ? summary.total_pnl >= 0 : undefined}
+          />
+          {/* 3 stats — 3-col on mobile */}
+          <div className="grid grid-cols-3 md:grid-cols-3 gap-3">
             <KpiCard
               label="Win Rate"
               value={fmtPct(summary?.win_rate ?? null)}
@@ -360,14 +362,14 @@ export default function Dashboard() {
               changePositive={summary ? summary.avg_rr >= 1 : undefined}
             />
             <KpiCard
-              label="Drawdown Max"
+              label="Drawdown"
               value={summary?.max_drawdown_pct != null ? `${summary.max_drawdown_pct.toFixed(1)}%` : '—'}
               change={summary ? `Sharpe ${summary.sharpe?.toFixed(2) ?? '—'}` : undefined}
               changePositive={summary ? summary.max_drawdown_pct < 10 : undefined}
             />
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* Comparison vs prev period */}
       {showComparison && (

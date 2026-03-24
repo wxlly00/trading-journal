@@ -272,15 +272,27 @@ export default function TradeDetail() {
         Retour
       </button>
 
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <h1 className="text-2xl font-extrabold text-dark">{trade.symbol}</h1>
-        <Badge variant={trade.type === 'buy' ? 'buy' : 'sell'} label={trade.type.toUpperCase()} />
-        <Badge
-          variant={trade.status === 'win' ? 'win' : trade.status === 'loss' ? 'loss' : 'neutral'}
-          label={trade.status.toUpperCase()}
-        />
-        <span className="text-sm text-[#999] ml-auto">{fmtDatetime(trade.open_time)}</span>
+      {/* Hero card */}
+      <div className="bg-dark rounded-2xl p-5 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-white text-xl font-extrabold">{trade.symbol}</span>
+            <Badge variant={trade.type === 'buy' ? 'buy' : 'sell'} label={trade.type.toUpperCase()} />
+            <Badge
+              variant={trade.status === 'win' ? 'win' : trade.status === 'loss' ? 'loss' : 'neutral'}
+              label={trade.status.toUpperCase()}
+            />
+          </div>
+          <p className="text-[#666] text-xs">{fmtDatetime(trade.open_time)}</p>
+        </div>
+        <div className="text-right">
+          <p className={`text-3xl font-black ${trade.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
+            {fmtPnl(trade.pnl_net)}
+          </p>
+          {trade.rr_realized != null && (
+            <p className="text-[#555] text-sm mt-0.5">{trade.rr_realized.toFixed(2)}R</p>
+          )}
+        </div>
       </div>
 
       {/* 2-col grid */}
@@ -354,10 +366,10 @@ export default function TradeDetail() {
                 key={t}
                 onClick={() => handleTagClick(t)}
                 disabled={tagSaving}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all border ${
+                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
                   active
                     ? 'bg-dark text-white border-dark'
-                    : 'bg-surface text-[#888] border-subtle hover:border-dark/30 hover:text-dark'
+                    : 'bg-surface text-muted border-subtle hover:border-dark/30 hover:text-dark'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {t}
@@ -384,7 +396,7 @@ export default function TradeDetail() {
             <span className="w-3 h-3 border border-[#888] border-t-transparent rounded-full animate-spin" />
           )}
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           {[
             { score: 1, emoji: '😰', label: 'Très mauvais' },
             { score: 2, emoji: '😟', label: 'Mauvais' },
@@ -397,10 +409,10 @@ export default function TradeDetail() {
               onClick={() => handlePsyClick(score)}
               disabled={psySaving}
               title={label}
-              className={`flex-1 py-2.5 rounded-xl text-2xl transition-all border-2 disabled:opacity-50 ${
+              className={`flex-1 py-3 rounded-xl text-3xl transition-all border-2 disabled:opacity-50 ${
                 psyScore === score
                   ? 'border-dark bg-subtle scale-105'
-                  : 'border-transparent bg-subtle/50 opacity-60 hover:opacity-100'
+                  : 'border-transparent bg-subtle/50 opacity-50 hover:opacity-100'
               }`}
             >
               {emoji}

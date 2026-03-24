@@ -438,7 +438,52 @@ export default function Journal() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── Mobile: card rows ────────────────────────────────── */}
+            <div className="md:hidden divide-y divide-subtle">
+              {sorted.map((t) => (
+                <button
+                  key={t.id + '-card'}
+                  onClick={() => navigate(`/journal/${t.id}`)}
+                  className="w-full px-4 py-4 flex items-center gap-3 active:bg-surface transition-colors text-left"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="font-bold text-dark text-[15px]">{t.symbol}</span>
+                      <Badge variant={t.type === 'buy' ? 'buy' : 'sell'} label={t.type.toUpperCase()} />
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted flex-wrap">
+                      <span>{fmtDate(t.open_time)}</span>
+                      <span>·</span>
+                      <span>{fmtDuration(t.duration_min)}</span>
+                      {t.rr_realized != null && (
+                        <>
+                          <span>·</span>
+                          <span>{t.rr_realized.toFixed(1)}R</span>
+                        </>
+                      )}
+                      {t.session && (
+                        <>
+                          <span>·</span>
+                          <span className="capitalize">{t.session}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
+                    <span className={`text-base font-bold ${t.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
+                      {fmtPnl(t.pnl_net)}
+                    </span>
+                    <Badge
+                      variant={t.status === 'win' ? 'win' : t.status === 'loss' ? 'loss' : 'neutral'}
+                      label={t.status.toUpperCase()}
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* ── Desktop: table ───────────────────────────────────── */}
+            <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="border-b border-subtle">
@@ -490,7 +535,7 @@ export default function Journal() {
                 ))}
               </tbody>
             </table>
-            </div>
+            </div>{/* end hidden md:block */}
 
             {/* Load more */}
             {hasMore && (
