@@ -113,6 +113,7 @@ export default function Settings() {
   const [newAccount, setNewAccount] = useState({ name: '', broker: '', initial_capital: '' })
   const [showNewAccountForm, setShowNewAccountForm] = useState(false)
   const [creatingAccount, setCreatingAccount] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
   const [rotateKeyModal, setRotateKeyModal] = useState<string | null>(null) // holds the new api_key
 
   // Edit account inline
@@ -154,6 +155,7 @@ export default function Settings() {
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault()
     setCreatingAccount(true)
+    setCreateError(null)
     try {
       const created = await api.post<Account & { api_key?: string }>('/api/accounts', {
         name: newAccount.name,
@@ -166,8 +168,8 @@ export default function Settings() {
       }
       setNewAccount({ name: '', broker: '', initial_capital: '' })
       setShowNewAccountForm(false)
-    } catch {
-      // ignore
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Erreur lors de la création')
     } finally {
       setCreatingAccount(false)
     }
@@ -401,6 +403,9 @@ export default function Settings() {
                       placeholder="Capital initial (€)"
                       className="w-full px-3 py-2 rounded-xl border border-subtle bg-surface text-sm text-dark outline-none focus:border-dark transition-colors"
                     />
+                    {createError && (
+                      <p className="text-xs text-red font-medium">{createError}</p>
+                    )}
                     <div className="flex gap-2">
                       <button
                         type="submit"
