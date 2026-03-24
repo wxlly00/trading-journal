@@ -520,7 +520,7 @@ export default function Dashboard() {
             <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b border-subtle">
-                  {['Paire', 'Dir.', 'P&L', 'R:R', 'Duree', 'Statut'].map((col) => (
+                  {['Paire', 'Dir.', 'Lots', 'R:R', 'P&L', 'Statut'].map((col) => (
                     <th key={col} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
                       {col}
                     </th>
@@ -529,7 +529,7 @@ export default function Dashboard() {
                     Entree
                   </th>
                   <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
-                    Lots
+                    Duree
                   </th>
                 </tr>
               </thead>
@@ -544,13 +544,13 @@ export default function Dashboard() {
                     <td className="px-4 py-3">
                       <Badge variant={t.type === 'buy' ? 'buy' : 'sell'} label={t.type.toUpperCase()} />
                     </td>
-                    <td className={`px-4 py-3 text-sm font-bold ${t.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
-                      {fmtPnl(t.pnl_net)}
-                    </td>
+                    <td className="px-4 py-3 text-sm text-muted">{t.lots}</td>
                     <td className="px-4 py-3 text-sm text-muted">
                       {t.rr_realized != null ? t.rr_realized.toFixed(2) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted">{fmtDuration(t.duration_min)}</td>
+                    <td className={`px-4 py-3 text-sm font-bold ${t.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
+                      {fmtPnl(t.pnl_net)}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge
                         variant={t.status === 'win' ? 'win' : t.status === 'loss' ? 'loss' : 'neutral'}
@@ -558,7 +558,7 @@ export default function Dashboard() {
                       />
                     </td>
                     <td className="px-4 py-3 text-sm text-muted hidden md:table-cell">{fmtPrice(t.open_price)}</td>
-                    <td className="px-4 py-3 text-sm text-muted hidden md:table-cell">{t.lots}</td>
+                    <td className="px-4 py-3 text-sm text-muted hidden md:table-cell">{fmtDuration(t.duration_min)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -454,19 +454,11 @@ export default function Journal() {
                     <div className="flex items-center gap-1.5 text-xs text-muted flex-wrap">
                       <span>{fmtDate(t.open_time)}</span>
                       <span>·</span>
+                      <span>{t.lots} lot{t.lots > 1 ? 's' : ''}</span>
+                      <span>·</span>
+                      <span>{t.rr_realized != null ? `${t.rr_realized.toFixed(1)}R` : '—'}</span>
+                      <span>·</span>
                       <span>{fmtDuration(t.duration_min)}</span>
-                      {t.rr_realized != null && (
-                        <>
-                          <span>·</span>
-                          <span>{t.rr_realized.toFixed(1)}R</span>
-                        </>
-                      )}
-                      {t.session && (
-                        <>
-                          <span>·</span>
-                          <span className="capitalize">{t.session}</span>
-                        </>
-                      )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 flex flex-col items-end gap-1.5">
