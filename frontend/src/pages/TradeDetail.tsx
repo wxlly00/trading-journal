@@ -27,6 +27,7 @@ interface Trade {
   tag: string | null
   tags: string[] | null
   screenshot_url?: string | null
+  psy_score?: number | null
 }
 
 const PRESET_TAGS = ['Setup A', 'Setup B', 'Breakout', 'Reversal', 'Scalp'] as const
