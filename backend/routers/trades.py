@@ -67,7 +67,10 @@ async def list_trades(
     elif result == "loss":
         q = q.lt("pnl_net", 0)
     q = q.order("open_time", desc=True).range(offset, offset + limit - 1)
-    return q.execute().data
+    trades = q.execute().data
+    for t in trades:
+        t.setdefault("lots", t.get("volume"))
+    return trades
 
 
 @router.get("/{trade_id}")
@@ -76,7 +79,9 @@ async def get_trade(trade_id: str, user: dict = Depends(get_current_user)):
     r = db.table("trades").select("*").eq("id", trade_id).eq("user_id", user["sub"]).execute()
     if not r.data:
         raise HTTPException(404)
-    return r.data[0]
+    trade = r.data[0]
+    trade.setdefault("lots", trade.get("volume"))
+    return trade
 
 
 @router.patch("/{trade_id}")
