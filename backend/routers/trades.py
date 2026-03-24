@@ -2,7 +2,7 @@ import uuid
 import csv
 import io
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from core.security import get_current_user, verify_api_key
 from db.supabase import get_client
 from services.calculator import enrich_trade
@@ -41,7 +41,10 @@ async def list_trades(
     status: str | None = None,
     session: str | None = None,
     direction: str | None = None,
-    page: int = 1,
+    result: str | None = None,
+    from_: str | None = Query(default=None, alias="from"),
+    to: str | None = None,
+    offset: int = 0,
     limit: int = 50,
     user: dict = Depends(get_current_user),
 ):
@@ -55,7 +58,15 @@ async def list_trades(
         q = q.eq("session", session)
     if direction:
         q = q.eq("type", direction)
-    q = q.order("open_time", desc=True).range((page - 1) * limit, page * limit - 1)
+    if from_:
+        q = q.gte("close_time", from_)
+    if to:
+        q = q.lte("close_time", to)
+    if result == "win":
+        q = q.gt("pnl_net", 0)
+    elif result == "loss":
+        q = q.lt("pnl_net", 0)
+    q = q.order("open_time", desc=True).range(offset, offset + limit - 1)
     return q.execute().data
 
 
