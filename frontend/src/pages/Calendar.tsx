@@ -147,7 +147,7 @@ export default function Calendar() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Header + month navigation */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-extrabold text-[#111]">Calendrier</h1>
@@ -173,7 +173,7 @@ export default function Calendar() {
       </div>
 
       {/* Calendar card */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl overflow-hidden">
         {/* Weekday headers */}
         <div className="grid grid-cols-7 border-b border-[#f0f0f0]">
           {WEEKDAY_HEADERS.map((d) => (
@@ -211,7 +211,7 @@ export default function Calendar() {
                     <div
                       key={day.dateStr}
                       className={[
-                        'relative h-20 p-2 border-r border-[#f0f0f0] last:border-r-0 transition-colors',
+                        'relative h-12 md:h-20 p-1 md:p-2 border-r border-border last:border-r-0 transition-colors',
                         day.isCurrentMonth ? 'bg-white' : 'bg-[#fafafa]',
                         day.isToday ? 'ring-2 ring-inset ring-[#111]' : '',
                       ]

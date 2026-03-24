@@ -61,7 +61,7 @@ interface TooltipState {
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="bg-card rounded-2xl p-5">
       <p className="text-[#888] text-xs font-medium uppercase tracking-wide mb-2">{label}</p>
       <p
         className="text-2xl font-bold"
@@ -188,8 +188,8 @@ export default function Stats() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-extrabold text-[#111]">Statistiques</h1>
+    <div className="p-4 md:p-6 space-y-6">
+      <h1 className="text-2xl font-extrabold text-dark">Statistiques</h1>
 
       {/* Row 1 — 6 stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -250,7 +250,7 @@ export default function Stats() {
       {/* Row 2 — Sessions + Streaks */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Sessions */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="bg-card rounded-2xl p-5">
           <p className="text-[#111] font-semibold mb-4">Sessions de trading</p>
           <div className="space-y-3">
             {sessions
@@ -294,10 +294,10 @@ export default function Stats() {
         </div>
 
         {/* Streaks */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm">
+        <div className="bg-card rounded-2xl p-5">
           <p className="text-[#111] font-semibold mb-4">Séries</p>
           {streaks ? (
-            <div className="grid grid-cols-2 gap-4 h-full">
+            <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col items-center justify-center bg-[#f5f5f5] rounded-xl p-4">
                 <p className="text-4xl font-black text-[#22c55e]">{streaks.max_win_streak}</p>
                 <p className="text-xs text-[#888] mt-2 text-center">Max gains consécutifs</p>
@@ -326,7 +326,7 @@ export default function Stats() {
       </div>
 
       {/* Row 3 — Heatmap */}
-      <div className="bg-white rounded-2xl p-5 shadow-sm overflow-x-auto">
+      <div className="bg-card rounded-2xl p-5 overflow-x-auto">
         <p className="text-[#111] font-semibold mb-4">Heatmap horaire</p>
         <div ref={heatmapRef} className="relative" style={{ minWidth: 680 }}>
           {/* Hour labels */}

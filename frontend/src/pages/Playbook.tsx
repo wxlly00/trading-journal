@@ -545,9 +545,9 @@ export default function Playbook() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 md:mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-dark">Playbook</h1>
           <p className="text-muted text-sm mt-1">Vos stratégies et setups de trading</p>
@@ -677,7 +677,7 @@ export default function Playbook() {
 
           {/* Grid */}
           {loadingDrawings ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="bg-card rounded-2xl p-5 animate-pulse">
                   <div className="h-32 bg-subtle rounded-xl mb-3" />
@@ -690,7 +690,7 @@ export default function Playbook() {
               Aucun dessin pour le moment. Créez votre premier dessin !
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {drawings.map((drawing) => (
                 <div
                   key={drawing.id}

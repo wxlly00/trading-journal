@@ -141,15 +141,15 @@ export default function Notes() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 flex-shrink-0">
+      <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4 flex-shrink-0">
         <h1 className="text-2xl font-extrabold text-dark">Notes</h1>
         <p className="text-muted text-sm mt-1">Vos réflexions et observations de marché</p>
       </div>
 
       {/* Body: two panels */}
-      <div className="flex flex-1 overflow-hidden px-6 pb-6 gap-4">
-        {/* Left panel: date list */}
-        <div className="w-[220px] flex-shrink-0 bg-card rounded-2xl overflow-hidden flex flex-col">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6 gap-3 md:gap-4">
+        {/* Left panel: date list — horizontal scroll on mobile, sidebar on desktop */}
+        <div className="md:w-[220px] md:flex-shrink-0 bg-card rounded-2xl overflow-hidden flex flex-col md:h-auto h-auto max-h-40 md:max-h-none">
           <div className="p-3 border-b border-subtle flex-shrink-0">
             <button
               onClick={jumpToToday}
@@ -159,15 +159,15 @@ export default function Notes() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto md:overflow-y-auto overflow-x-auto md:overflow-x-hidden">
             {loading ? (
-              <div className="p-3 space-y-2">
+              <div className="p-3 flex md:flex-col gap-2">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-10 bg-subtle rounded-xl animate-pulse" />
+                  <div key={i} className="h-10 w-28 md:w-auto bg-subtle rounded-xl animate-pulse flex-shrink-0" />
                 ))}
               </div>
             ) : (
-              <ul className="p-2 space-y-0.5">
+              <ul className="p-2 flex flex-row md:flex-col gap-1 md:gap-0 md:space-y-0.5">
                 {sortedDates.map((date) => {
                   const hasNote = !!notes.find((n) => n.date === date)
                   const isToday = date === todayIso()
@@ -176,7 +176,7 @@ export default function Notes() {
                     <li key={date}>
                       <button
                         onClick={() => setSelectedDate(date)}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all flex items-center justify-between group ${
+                        className={`md:w-full text-left px-3 py-2 md:py-2.5 rounded-xl text-xs md:text-sm transition-all flex items-center justify-between group whitespace-nowrap ${
                           isSelected
                             ? 'bg-subtle font-semibold text-dark'
                             : 'text-muted hover:text-dark hover:bg-subtle'
