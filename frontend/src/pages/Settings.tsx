@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 import { useAuthStore } from '../stores/auth'
 import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
+
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -126,6 +128,12 @@ export default function Settings() {
   const [newAlert, setNewAlert] = useState({ type: 'drawdown', threshold: '' })
   const [showNewAlertForm, setShowNewAlertForm] = useState(false)
 
+  // Import CSV
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+
   // URL copy
   const [urlCopied, setUrlCopied] = useState(false)
 
@@ -230,6 +238,33 @@ export default function Settings() {
   async function handleDeleteAlert(id: string) {
     await api.delete(`/api/alerts/${id}`)
     setAlerts((prev) => prev.filter((a) => a.id !== id))
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !activeAccountId) return
+    setImporting(true)
+    setImportResult(null)
+    setImportError(null)
+    try {
+      const token = useAuthStore.getState().session?.access_token
+      const form = new FormData()
+      form.append('account_id', activeAccountId)
+      form.append('file', file)
+      const res = await fetch(`${BASE}/api/trades/import`, {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Erreur import')
+      setImportResult(data)
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : 'Erreur import')
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   async function handleLogout() {
@@ -533,6 +568,50 @@ export default function Settings() {
               </ol>
             </div>
           </div>
+        </Card>
+      </section>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* SECTION: Import historique MT5 */}
+      {/* ------------------------------------------------------------------ */}
+      <section>
+        <SectionTitle>Import historique MT5</SectionTitle>
+        <Card>
+          <p className="text-xs text-muted mb-4">
+            Exportez votre historique depuis MT5 → Historique → clic droit → Enregistrer en tant que rapport (CSV), puis importez-le ici.
+          </p>
+          {!activeAccountId ? (
+            <p className="text-xs text-muted">Activez un compte pour importer.</p>
+          ) : (
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv,.txt,.tsv"
+                onChange={handleImport}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={importing}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-dark text-white text-sm font-semibold hover:bg-[#333] transition-colors disabled:opacity-50"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                {importing ? 'Import en cours...' : 'Importer un fichier CSV'}
+              </button>
+              {importResult && (
+                <p className="text-xs text-dark font-medium">
+                  {importResult.imported} trade{importResult.imported > 1 ? 's' : ''} importé{importResult.imported > 1 ? 's' : ''}
+                  {importResult.skipped > 0 && `, ${importResult.skipped} ignoré${importResult.skipped > 1 ? 's' : ''} (déjà présents)`}
+                </p>
+              )}
+              {importError && <p className="text-xs text-red font-medium">{importError}</p>}
+            </div>
+          )}
         </Card>
       </section>
 

@@ -1,5 +1,8 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+import csv
+import io
+from datetime import datetime, timezone
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from core.security import get_current_user, verify_api_key
 from db.supabase import get_client
 from services.calculator import enrich_trade
@@ -72,6 +75,122 @@ async def update_trade(trade_id: str, payload: dict, user: dict = Depends(get_cu
     data = {k: v for k, v in payload.items() if k in allowed}
     db.table("trades").update(data).eq("id", trade_id).eq("user_id", user["sub"]).execute()
     return {"ok": True}
+
+
+def _parse_mt5_time(s: str) -> str | None:
+    """Parse MT5 datetime formats to ISO."""
+    for fmt in ("%Y.%m.%d %H:%M:%S", "%Y.%m.%d %H:%M", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(s.strip(), fmt).replace(tzinfo=timezone.utc).isoformat()
+        except ValueError:
+            pass
+    return None
+
+
+def _parse_mt5_csv(content: str) -> list[dict]:
+    """Parse MT5 account history CSV (deals format, tab or semicolon separated)."""
+    lines = [l for l in content.splitlines() if l.strip() and not l.startswith('#')]
+    if not lines:
+        return []
+
+    # Detect delimiter
+    delim = '\t' if '\t' in lines[0] else (';' if ';' in lines[0] else ',')
+    reader = csv.DictReader(lines, delimiter=delim)
+
+    deals: list[dict] = []
+    for row in reader:
+        row = {k.strip().lower(): v.strip() for k, v in row.items() if k}
+        # Skip balance/credit entries
+        t = row.get('type', row.get('deal type', '')).lower()
+        if t in ('balance', 'credit', 'deposit', 'withdrawal', ''):
+            continue
+        deals.append(row)
+
+    # Pair in/out deals by order/position
+    positions: dict[str, dict] = {}
+    trades: list[dict] = []
+
+    for d in deals:
+        direction = d.get('dir', d.get('direction', d.get('entry', ''))).lower()
+        order_id = d.get('order', d.get('position', d.get('deal', '')))
+        symbol = d.get('symbol', '')
+        trade_type = d.get('type', 'buy').lower()
+        volume = float(d.get('volume', 0) or 0)
+        price = float(d.get('price', 0) or 0)
+        commission = float(d.get('commission', 0) or 0)
+        swap = float(d.get('swap', 0) or 0)
+        profit = float(d.get('profit', 0) or 0)
+        sl = float(d.get('sl', d.get('s/l', 0)) or 0)
+        tp = float(d.get('tp', d.get('t/p', 0)) or 0)
+        deal_time = _parse_mt5_time(d.get('time', ''))
+        ticket = int(d.get('deal', d.get('order', 0)) or 0)
+
+        if 'in' in direction or direction == 'entry':
+            positions[order_id] = {
+                'ticket': ticket, 'symbol': symbol, 'type': trade_type,
+                'volume': volume, 'open_price': price, 'open_time': deal_time,
+                'sl': sl or None, 'tp': tp or None,
+                'commission': commission, 'status': 'open',
+            }
+        elif 'out' in direction or direction == 'exit':
+            pos = positions.pop(order_id, None)
+            if pos:
+                total_commission = pos.get('commission', 0) + commission
+                trade = {**pos,
+                    'close_price': price, 'close_time': deal_time,
+                    'profit': profit, 'commission': total_commission,
+                    'swap': swap, 'status': 'closed',
+                }
+                trades.append(enrich_trade(trade))
+            else:
+                # No matching open — create standalone closed trade
+                trades.append(enrich_trade({
+                    'ticket': ticket, 'symbol': symbol, 'type': trade_type,
+                    'volume': volume, 'open_price': price, 'close_price': price,
+                    'open_time': deal_time, 'close_time': deal_time,
+                    'profit': profit, 'commission': commission, 'swap': swap,
+                    'sl': sl or None, 'tp': tp or None, 'status': 'closed',
+                }))
+
+    # Unclosed positions → open trades
+    for pos in positions.values():
+        trades.append(pos)
+
+    return trades
+
+
+@router.post("/import")
+async def import_trades(
+    account_id: str = Form(...),
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    db = get_client()
+    # Verify account belongs to user
+    acc = db.table("accounts").select("id").eq("id", account_id).eq("user_id", user["sub"]).execute()
+    if not acc.data:
+        raise HTTPException(403, "Compte non trouvé")
+
+    content = (await file.read()).decode("utf-8", errors="ignore")
+    trades = _parse_mt5_csv(content)
+    if not trades:
+        raise HTTPException(400, "Aucun trade trouvé dans le fichier")
+
+    imported = 0
+    skipped = 0
+    for t in trades:
+        ticket = t.get("ticket")
+        if ticket:
+            existing = db.table("trades").select("id").eq("account_id", account_id).eq("ticket", ticket).execute()
+            if existing.data:
+                skipped += 1
+                continue
+        t["account_id"] = account_id
+        t["user_id"] = user["sub"]
+        db.table("trades").insert(t).execute()
+        imported += 1
+
+    return {"imported": imported, "skipped": skipped, "total": len(trades)}
 
 
 @router.post("/{trade_id}/screenshot")
