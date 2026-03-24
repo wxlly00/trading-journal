@@ -78,3 +78,10 @@ body {
   100% { transform: scale(1); }
 }
 .tab-pop { animation: tabPop 0.2s ease-out; }
+
+/* ── Page transition animation ────────────────────────────── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-in { animation: pageIn 0.15s ease-out; }

@@ -16,6 +16,7 @@ const Notes = lazy(() => import('./pages/Notes'))
 const Playbook = lazy(() => import('./pages/Playbook'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Calculator = lazy(() => import('./pages/Calculator'))
+const AIAnalysis = lazy(() => import('./pages/AIAnalysis'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, initialized } = useAuthStore()
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="playbook" element={<Suspense fallback={<Spinner />}><Playbook /></Suspense>} />
           <Route path="settings" element={<Suspense fallback={<Spinner />}><Settings /></Suspense>} />
           <Route path="calculator" element={<Suspense fallback={<Spinner />}><Calculator /></Suspense>} />
+          <Route path="ai" element={<Suspense fallback={<Spinner />}><AIAnalysis /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>

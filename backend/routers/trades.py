@@ -104,6 +104,27 @@ async def list_trades(
     return trades
 
 
+@router.get("/search")
+async def search_trades(q: str = "", user: dict = Depends(get_current_user)):
+    if not q or len(q) < 2:
+        return []
+    db = get_client()
+    acc_res = db.table("accounts").select("id").eq("user_id", user["sub"]).execute()
+    account_ids = [a["id"] for a in acc_res.data]
+    if not account_ids:
+        return []
+    res = (
+        db.table("trades")
+        .select("id,symbol,type,profit,open_time,account_id")
+        .in_("account_id", account_ids)
+        .or_(f"symbol.ilike.%{q}%,note.ilike.%{q}%")
+        .order("open_time", desc=True)
+        .limit(20)
+        .execute()
+    )
+    return res.data
+
+
 @router.get("/{trade_id}")
 async def get_trade(trade_id: str, user: dict = Depends(get_current_user)):
     db = get_client()

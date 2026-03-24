@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 import { Badge } from '../components/ui/Badge'
+import { TradingViewWidget } from '../components/ui/TradingViewWidget'
 import { fmtPnl, fmtDatetime, fmtPrice, fmtDuration } from '../lib/formatters'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -77,6 +78,36 @@ export default function TradeDetail() {
   const [tpValue, setTpValue] = useState('')
   const [slTpSaving, setSlTpSaving] = useState(false)
   const [slTpSaved, setSlTpSaved] = useState(false)
+
+  // Voice notes
+  const [listening, setListening] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  function handleVoiceNote() {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SR) {
+      alert("La reconnaissance vocale n'est pas disponible sur ce navigateur.")
+      return
+    }
+    if (listening) {
+      recognitionRef.current?.stop()
+      setListening(false)
+      return
+    }
+    const recognition = new SR()
+    recognition.lang = 'fr-FR'
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognition.onresult = (e: any) => {
+      const transcript: string = e.results[0][0].transcript
+      setNote((prev) => (prev ? prev + '\n' + transcript : transcript))
+    }
+    recognition.onend = () => setListening(false)
+    recognition.onerror = () => setListening(false)
+    recognitionRef.current = recognition
+    recognition.start()
+    setListening(true)
+  }
 
   // Screenshot upload
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -383,7 +414,28 @@ export default function TradeDetail() {
         {/* Right: Note editor */}
         <div className="bg-card rounded-2xl p-5 flex flex-col">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-[#999] uppercase tracking-wider">Note</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-semibold text-[#999] uppercase tracking-wider">Note</p>
+              {/* Voice note button */}
+              <button
+                onClick={handleVoiceNote}
+                title={listening ? "Arrêter l'enregistrement" : 'Note vocale (speech-to-text)'}
+                className={`w-6 h-6 flex items-center justify-center rounded-lg transition-colors ${
+                  listening ? 'bg-red-100 text-red-500 dark:bg-red-950 dark:text-red-400' : 'bg-subtle text-muted hover:text-dark'
+                }`}
+              >
+                {listening ? (
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </svg>
+                )}
+              </button>
+            </div>
             <span className="text-[11px] font-medium transition-all">
               {noteSaving ? (
                 <span className="text-[#888] flex items-center gap-1">
@@ -404,8 +456,17 @@ export default function TradeDetail() {
             placeholder="Ajouter des notes sur ce trade... (entrée de prix, emotion, setup, erreurs...)"
             className="flex-1 min-h-[180px] resize-none bg-surface rounded-xl p-3 text-sm text-dark placeholder-[#ccc] outline-none focus:ring-1 focus:ring-dark/20 leading-relaxed"
           />
-          <p className="text-[10px] text-[#bbb] mt-2">Sauvegarde automatique a la sortie du champ</p>
+          <p className="text-[10px] text-[#bbb] mt-2">
+            Sauvegarde automatique à la sortie du champ
+            {listening && <span className="ml-2 text-red-500 font-medium">● Écoute...</span>}
+          </p>
         </div>
+      </div>
+
+      {/* TradingView chart */}
+      <div className="bg-card rounded-2xl p-5">
+        <p className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-3">Graphique</p>
+        <TradingViewWidget symbol={trade.symbol} />
       </div>
 
       {/* Tags */}

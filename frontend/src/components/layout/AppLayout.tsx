@@ -4,6 +4,7 @@ import { useAuthStore } from '../../stores/auth'
 import { useAccountStore } from '../../stores/account'
 import { useThemeStore } from '../../stores/theme'
 import { Toaster } from '../ui/Toaster'
+import { GlobalSearch } from '../ui/GlobalSearch'
 import { supabase } from '../../lib/supabase'
 import { LivePill } from '../ui/LivePill'
 
@@ -41,6 +42,10 @@ const sidebarNav = [
   {
     to: '/calculator', label: 'Calculateur',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
+  },
+  {
+    to: '/ai', label: 'Analyse IA',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
   },
 ]
 
@@ -93,6 +98,7 @@ const moreItems = [
   { to: '/calendar', label: 'Calendrier', icon: '📅' },
   { to: '/playbook', label: 'Playbook', icon: '📚' },
   { to: '/calculator', label: 'Calculateur', icon: '🧮' },
+  { to: '/ai', label: 'Analyse IA', icon: '✨' },
   { to: '/settings', label: 'Paramètres', icon: '⚙️' },
 ]
 
@@ -104,9 +110,22 @@ export function AppLayout() {
   const { activeAccountId } = useAccountStore()
   const { isDark, toggle, init } = useThemeStore()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   // Init dark mode class on mount
   useEffect(() => { init() }, [init])
+
+  // Cmd+K / Ctrl+K → open global search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -226,6 +245,16 @@ export function AppLayout() {
           <span className="text-base font-extrabold text-dark">TradingJournal</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* Search button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="w-8 h-8 flex items-center justify-center rounded-xl bg-subtle text-muted"
+            aria-label="Recherche"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
           <LivePill connected={!!activeAccountId} />
           <button
             onClick={toggle}
@@ -250,7 +279,9 @@ export function AppLayout() {
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
       <main className="flex-1 bg-surface overflow-y-auto pb-safe-nav md:pb-0">
-        <Outlet />
+        <div key={location.pathname} className="animate-page-in h-full">
+          <Outlet />
+        </div>
       </main>
 
       {/* ── MOBILE BOTTOM TAB BAR ────────────────────────────────── */}
@@ -332,6 +363,9 @@ export function AppLayout() {
           </div>
         </>
       )}
+
+      {/* ── GLOBAL SEARCH ────────────────────────────────────────── */}
+      {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
 
       {/* ── TOASTER ───────────────────────────────────────────────── */}
       <Toaster />
