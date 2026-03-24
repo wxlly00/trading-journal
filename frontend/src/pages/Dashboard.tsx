@@ -85,6 +85,38 @@ function getDateRange(period: Period): { from: string; to: string } {
   return { from: from.toISOString(), to }
 }
 
+function getPrevDateRange(period: Period): { from: string; to: string } {
+  const now = new Date()
+  const pFrom = new Date(now)
+  const pTo = new Date(now)
+
+  if (period === 'day') {
+    pFrom.setDate(pFrom.getDate() - 1)
+    pFrom.setHours(0, 0, 0, 0)
+    pTo.setDate(pTo.getDate() - 1)
+    pTo.setHours(23, 59, 59, 999)
+  } else if (period === 'week') {
+    const day = pFrom.getDay()
+    const diff = day === 0 ? 6 : day - 1
+    pFrom.setDate(pFrom.getDate() - diff - 7)
+    pFrom.setHours(0, 0, 0, 0)
+    pTo.setDate(pFrom.getDate() + 6)
+    pTo.setHours(23, 59, 59, 999)
+  } else if (period === 'month') {
+    pFrom.setMonth(pFrom.getMonth() - 1, 1)
+    pFrom.setHours(0, 0, 0, 0)
+    pTo.setDate(0) // last day of prev month
+    pTo.setHours(23, 59, 59, 999)
+  } else {
+    pFrom.setFullYear(pFrom.getFullYear() - 1, 0, 1)
+    pFrom.setHours(0, 0, 0, 0)
+    pTo.setFullYear(pTo.getFullYear() - 1, 11, 31)
+    pTo.setHours(23, 59, 59, 999)
+  }
+
+  return { from: pFrom.toISOString(), to: pTo.toISOString() }
+}
+
 function periodLabel(period: Period): string {
   const { from } = getDateRange(period)
   const d = new Date(from)
@@ -102,6 +134,20 @@ function periodLabel(period: Period): string {
   return d.getFullYear().toString()
 }
 
+function prevPeriodLabel(period: Period): string {
+  if (period === 'day') return 'hier'
+  if (period === 'week') return 'sem. préc.'
+  if (period === 'month') return 'mois préc.'
+  return 'année préc.'
+}
+
+function fmtDelta(delta: number, format: 'pnl' | 'pct' | 'count'): string {
+  const sign = delta >= 0 ? '+' : ''
+  if (format === 'pnl') return `${sign}$${delta.toFixed(0)}`
+  if (format === 'pct') return `${sign}${delta.toFixed(1)}%`
+  return `${sign}${delta}`
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function KpiSkeleton({ dark }: { dark?: boolean }) {
@@ -109,6 +155,27 @@ function KpiSkeleton({ dark }: { dark?: boolean }) {
     <div className={`rounded-2xl p-5 animate-pulse ${dark ? 'bg-dark' : 'bg-card'}`}>
       <div className={`h-3 w-20 rounded mb-3 ${dark ? 'bg-white/10' : 'bg-subtle'}`} />
       <div className={`h-9 w-28 rounded ${dark ? 'bg-white/10' : 'bg-subtle'}`} />
+    </div>
+  )
+}
+
+// ─── Comparison row ───────────────────────────────────────────────────────────
+
+function DeltaBadge({
+  label, delta, format,
+}: {
+  label: string
+  delta: number
+  format: 'pnl' | 'pct' | 'count'
+}) {
+  const positive = delta >= 0
+  return (
+    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${
+      positive ? 'bg-green/10 text-green' : 'bg-red/10 text-red'
+    }`}>
+      <span>{positive ? '▲' : '▼'}</span>
+      <span>{fmtDelta(delta, format)}</span>
+      <span className="text-[10px] opacity-60 font-normal">{label}</span>
     </div>
   )
 }
@@ -133,11 +200,13 @@ export default function Dashboard() {
 
   const [period, setPeriod] = useState<Period>('month')
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [prevSummary, setPrevSummary] = useState<Summary | null>(null)
   const [equity, setEquity] = useState<EquityPoint[]>([])
   const [symbols, setSymbols] = useState<SymbolStat[]>([])
   const [trades, setTrades] = useState<Trade[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastRefresh, setLastRefresh] = useState(Date.now())
 
   const fetchAll = useCallback(async () => {
     if (!activeAccountId) return
@@ -147,14 +216,19 @@ export default function Dashboard() {
     const { from, to } = getDateRange(period)
     const qs = `account_id=${activeAccountId}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
 
+    const { from: pFrom, to: pTo } = getPrevDateRange(period)
+    const prevQs = `account_id=${activeAccountId}&from=${encodeURIComponent(pFrom)}&to=${encodeURIComponent(pTo)}`
+
     try {
-      const [summaryData, equityData, symbolsData, tradesData] = await Promise.all([
+      const [summaryData, prevSummaryData, equityData, symbolsData, tradesData] = await Promise.all([
         api.get<Summary>(`/api/stats/summary?${qs}`),
+        api.get<Summary>(`/api/stats/summary?${prevQs}`),
         api.get<EquityPoint[]>(`/api/stats/equity-curve?${qs}`),
         api.get<SymbolStat[]>(`/api/stats/by-symbol?${qs}`),
         api.get<Trade[]>(`/api/trades?account_id=${activeAccountId}&limit=10&offset=0`),
       ])
       setSummary(summaryData)
+      setPrevSummary(prevSummaryData)
       setEquity(equityData)
       setSymbols(symbolsData.slice(0, 8))
       setTrades(tradesData)
@@ -165,9 +239,23 @@ export default function Dashboard() {
     }
   }, [activeAccountId, period])
 
+  // Initial + period-change fetch
   useEffect(() => {
     fetchAll()
   }, [fetchAll])
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!activeAccountId) return
+    const interval = setInterval(() => setLastRefresh(Date.now()), 30_000)
+    return () => clearInterval(interval)
+  }, [activeAccountId])
+
+  useEffect(() => {
+    if (lastRefresh === Date.now()) return // skip the initial mount (fetchAll handles it)
+    fetchAll()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastRefresh])
 
   // ── No account ──────────────────────────────────────────────────────────────
 
@@ -175,18 +263,18 @@ export default function Dashboard() {
     return (
       <div className="p-6 flex flex-col items-center justify-center h-full text-center gap-4">
         <div className="w-12 h-12 rounded-2xl bg-subtle flex items-center justify-center">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6 text-[#888]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6 text-muted">
             <circle cx="12" cy="12" r="3"/>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
           </svg>
         </div>
         <div>
           <p className="text-dark font-semibold">Aucun compte selectionne</p>
-          <p className="text-[#888] text-sm mt-1">Configurez un compte pour voir vos statistiques</p>
+          <p className="text-muted text-sm mt-1">Configurez un compte pour voir vos statistiques</p>
         </div>
         <button
           onClick={() => navigate('/settings')}
-          className="px-4 py-2 bg-dark text-white text-sm font-medium rounded-xl hover:bg-dark/80 transition-colors"
+          className="px-4 py-2 bg-dark text-white text-sm font-medium rounded-xl hover:opacity-80 transition-opacity"
         >
           Aller aux parametres
         </button>
@@ -200,10 +288,10 @@ export default function Dashboard() {
     return (
       <div className="p-6 flex flex-col items-center justify-center h-full text-center gap-3">
         <p className="text-red font-semibold">Erreur de chargement</p>
-        <p className="text-[#888] text-sm">{error}</p>
+        <p className="text-muted text-sm">{error}</p>
         <button
           onClick={fetchAll}
-          className="px-4 py-2 bg-dark text-white text-sm font-medium rounded-xl hover:bg-dark/80 transition-colors"
+          className="px-4 py-2 bg-dark text-white text-sm font-medium rounded-xl hover:opacity-80 transition-opacity"
         >
           Reessayer
         </button>
@@ -215,30 +303,34 @@ export default function Dashboard() {
 
   const maxAbsPnl = symbols.length > 0 ? Math.max(...symbols.map((s) => Math.abs(s.pnl))) : 1
 
+  // ── Deltas ───────────────────────────────────────────────────────────────────
+
+  const showComparison = summary && prevSummary && prevSummary.trades_count > 0
+
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       {/* Topbar */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-dark">Dashboard</h1>
-          <p className="text-[#888] text-sm mt-0.5 capitalize">{periodLabel(period)}</p>
+          <p className="text-muted text-sm mt-0.5 capitalize">{periodLabel(period)}</p>
         </div>
         <SegmentedControl
           value={period}
           onChange={(v) => setPeriod(v as Period)}
           options={[
             { label: 'Jour', value: 'day' },
-            { label: 'Semaine', value: 'week' },
+            { label: 'Sem.', value: 'week' },
             { label: 'Mois', value: 'month' },
-            { label: 'Annee', value: 'year' },
+            { label: 'An', value: 'year' },
           ]}
         />
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         {loading ? (
           <>
             <KpiSkeleton dark />
@@ -277,15 +369,44 @@ export default function Dashboard() {
         )}
       </div>
 
+      {/* Comparison vs prev period */}
+      {showComparison && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-[11px] text-muted font-medium">vs {prevPeriodLabel(period)} :</span>
+          <DeltaBadge
+            label="P&L"
+            delta={summary!.total_pnl - prevSummary!.total_pnl}
+            format="pnl"
+          />
+          <DeltaBadge
+            label="Win Rate"
+            delta={summary!.win_rate - prevSummary!.win_rate}
+            format="pct"
+          />
+          <DeltaBadge
+            label="Trades"
+            delta={summary!.trades_count - prevSummary!.trades_count}
+            format="count"
+          />
+          {summary!.avg_rr != null && prevSummary!.avg_rr != null && (
+            <DeltaBadge
+              label="R:R"
+              delta={summary!.avg_rr - prevSummary!.avg_rr}
+              format="pct"
+            />
+          )}
+        </div>
+      )}
+
       {/* Charts row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Equity Curve – 2/3 */}
-        <div className="col-span-2 bg-card rounded-2xl p-5">
-          <p className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-4">Courbe d&apos;equite</p>
+        <div className="md:col-span-2 bg-card rounded-2xl p-5">
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-4">Courbe d&apos;equite</p>
           {loading ? (
-            <div className="h-52 bg-subtle rounded-xl animate-pulse" />
+            <div className="h-44 md:h-52 bg-subtle rounded-xl animate-pulse" />
           ) : equity.length === 0 ? (
-            <div className="h-52 flex items-center justify-center text-[#888] text-sm">Pas de donnees</div>
+            <div className="h-44 md:h-52 flex items-center justify-center text-muted text-sm">Pas de donnees</div>
           ) : (
             <ResponsiveContainer width="100%" height={208}>
               <AreaChart data={equity} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
@@ -327,7 +448,7 @@ export default function Dashboard() {
 
         {/* By-symbol – 1/3 */}
         <div className="bg-card rounded-2xl p-5">
-          <p className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-4">Par paire</p>
+          <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-4">Par paire</p>
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4, 5].map((i) => (
@@ -338,7 +459,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : symbols.length === 0 ? (
-            <div className="h-52 flex items-center justify-center text-[#888] text-sm">Pas de donnees</div>
+            <div className="h-52 flex items-center justify-center text-muted text-sm">Pas de donnees</div>
           ) : (
             <div className="space-y-2.5">
               {symbols.map((s) => {
@@ -358,7 +479,7 @@ export default function Dashboard() {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-[#999] mt-0.5">{s.trades} trades · {fmtPct(s.win_rate)} WR</p>
+                    <p className="text-[10px] text-muted mt-0.5">{s.trades} trades · {fmtPct(s.win_rate)} WR</p>
                   </div>
                 )
               })}
@@ -373,7 +494,7 @@ export default function Dashboard() {
           <p className="text-sm font-semibold text-dark">Derniers trades</p>
           <button
             onClick={() => navigate('/journal')}
-            className="text-xs text-[#888] hover:text-dark transition-colors font-medium"
+            className="text-xs text-muted hover:text-dark transition-colors font-medium"
           >
             Voir tout →
           </button>
@@ -391,49 +512,56 @@ export default function Dashboard() {
             ))}
           </div>
         ) : trades.length === 0 ? (
-          <div className="px-5 py-10 text-center text-[#888] text-sm">Aucun trade enregistre</div>
+          <div className="px-5 py-10 text-center text-muted text-sm">Aucun trade enregistre</div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-subtle">
-                {['Paire', 'Direction', 'Entree', 'Sortie', 'Lots', 'P&L', 'R:R', 'Duree', 'Statut'].map((col) => (
-                  <th key={col} className="px-5 py-2.5 text-left text-[11px] font-semibold text-[#999] uppercase tracking-wider whitespace-nowrap">
-                    {col}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px]">
+              <thead>
+                <tr className="border-b border-subtle">
+                  {['Paire', 'Dir.', 'P&L', 'R:R', 'Duree', 'Statut'].map((col) => (
+                    <th key={col} className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
+                      {col}
+                    </th>
+                  ))}
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
+                    Entree
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-subtle">
-              {trades.map((t) => (
-                <tr
-                  key={t.id}
-                  onClick={() => navigate(`/journal/${t.id}`)}
-                  className="hover:bg-surface cursor-pointer transition-colors"
-                >
-                  <td className="px-5 py-3 text-sm font-semibold text-dark">{t.symbol}</td>
-                  <td className="px-5 py-3">
-                    <Badge variant={t.type === 'buy' ? 'buy' : 'sell'} label={t.type.toUpperCase()} />
-                  </td>
-                  <td className="px-5 py-3 text-sm text-[#888]">{fmtPrice(t.open_price)}</td>
-                  <td className="px-5 py-3 text-sm text-[#888]">{fmtPrice(t.close_price)}</td>
-                  <td className="px-5 py-3 text-sm text-[#888]">{t.lots}</td>
-                  <td className={`px-5 py-3 text-sm font-bold ${t.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
-                    {fmtPnl(t.pnl_net)}
-                  </td>
-                  <td className="px-5 py-3 text-sm text-[#888]">
-                    {t.rr_realized != null ? t.rr_realized.toFixed(2) : '—'}
-                  </td>
-                  <td className="px-5 py-3 text-sm text-[#888]">{fmtDuration(t.duration_min)}</td>
-                  <td className="px-5 py-3">
-                    <Badge
-                      variant={t.status === 'win' ? 'win' : t.status === 'loss' ? 'loss' : 'neutral'}
-                      label={t.status.toUpperCase()}
-                    />
-                  </td>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-muted uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
+                    Lots
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-subtle">
+                {trades.map((t) => (
+                  <tr
+                    key={t.id}
+                    onClick={() => navigate(`/journal/${t.id}`)}
+                    className="hover:bg-surface cursor-pointer transition-colors"
+                  >
+                    <td className="px-4 py-3 text-sm font-semibold text-dark">{t.symbol}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={t.type === 'buy' ? 'buy' : 'sell'} label={t.type.toUpperCase()} />
+                    </td>
+                    <td className={`px-4 py-3 text-sm font-bold ${t.pnl_net >= 0 ? 'text-green' : 'text-red'}`}>
+                      {fmtPnl(t.pnl_net)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted">
+                      {t.rr_realized != null ? t.rr_realized.toFixed(2) : '—'}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted">{fmtDuration(t.duration_min)}</td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={t.status === 'win' ? 'win' : t.status === 'loss' ? 'loss' : 'neutral'}
+                        label={t.status.toUpperCase()}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted hidden md:table-cell">{fmtPrice(t.open_price)}</td>
+                    <td className="px-4 py-3 text-sm text-muted hidden md:table-cell">{t.lots}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

@@ -67,6 +67,10 @@ export default function TradeDetail() {
   const [tag, setTag] = useState<string | null>(null)
   const [tagSaving, setTagSaving] = useState(false)
 
+  // Psy score
+  const [psyScore, setPsyScore] = useState<number | null>(null)
+  const [psySaving, setPsySaving] = useState(false)
+
   // Screenshot upload
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null)
@@ -82,6 +86,7 @@ export default function TradeDetail() {
       setTrade(data)
       setNote(data.note ?? '')
       setTag(data.tags?.[0] ?? data.tag ?? null)
+      setPsyScore(data.psy_score ?? null)
       setScreenshotUrl(data.screenshot_url ?? null)
       lastSavedNote.current = data.note ?? ''
     } catch (e) {
@@ -111,6 +116,24 @@ export default function TradeDetail() {
       setNote(lastSavedNote.current)
     } finally {
       setNoteSaving(false)
+    }
+  }
+
+  // ── Tag toggle ───────────────────────────────────────────────────────────────
+
+  // ── Psy score ────────────────────────────────────────────────────────────────
+
+  async function handlePsyClick(score: number) {
+    if (!trade) return
+    const newScore = psyScore === score ? null : score
+    setPsyScore(newScore)
+    setPsySaving(true)
+    try {
+      await api.patch<{ ok: boolean }>(`/api/trades/${trade.id}`, { psy_score: newScore })
+    } catch {
+      setPsyScore(psyScore) // revert
+    } finally {
+      setPsySaving(false)
     }
   }
 
@@ -236,7 +259,7 @@ export default function TradeDetail() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-4 md:p-6 space-y-5">
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -260,7 +283,7 @@ export default function TradeDetail() {
       </div>
 
       {/* 2-col grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Left: Trade info */}
         <div className="bg-card rounded-2xl p-5">
           <p className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-1">Informations</p>
@@ -350,6 +373,44 @@ export default function TradeDetail() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Psy Score */}
+      <div className="bg-card rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <p className="text-xs font-semibold text-[#999] uppercase tracking-wider">État psychologique</p>
+          {psySaving && (
+            <span className="w-3 h-3 border border-[#888] border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+        <div className="flex gap-3">
+          {[
+            { score: 1, emoji: '😰', label: 'Très mauvais' },
+            { score: 2, emoji: '😟', label: 'Mauvais' },
+            { score: 3, emoji: '😐', label: 'Neutre' },
+            { score: 4, emoji: '🙂', label: 'Bon' },
+            { score: 5, emoji: '😎', label: 'Excellent' },
+          ].map(({ score, emoji, label }) => (
+            <button
+              key={score}
+              onClick={() => handlePsyClick(score)}
+              disabled={psySaving}
+              title={label}
+              className={`flex-1 py-2.5 rounded-xl text-2xl transition-all border-2 disabled:opacity-50 ${
+                psyScore === score
+                  ? 'border-dark bg-subtle scale-105'
+                  : 'border-transparent bg-subtle/50 opacity-60 hover:opacity-100'
+              }`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+        {psyScore && (
+          <p className="text-xs text-[#888] mt-2 text-center">
+            {['', 'Très mauvais', 'Mauvais', 'Neutre', 'Bon', 'Excellent'][psyScore]}
+          </p>
+        )}
       </div>
 
       {/* Screenshot */}

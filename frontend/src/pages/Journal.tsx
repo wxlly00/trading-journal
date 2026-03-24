@@ -244,6 +244,25 @@ export default function Journal() {
 
   const sorted = sortTrades(trades, sortKey, sortDir)
 
+  function exportCSV() {
+    if (sorted.length === 0) return
+    const headers = ['Symbol','Direction','Open Time','Close Time','Open Price','Close Price','Lots','PnL Net','R:R','Duration (min)','Session','Status','Note']
+    const rows = sorted.map((t) => [
+      t.symbol, t.type,
+      t.open_time ? new Date(t.open_time).toLocaleString('fr-FR') : '',
+      t.close_time ? new Date(t.close_time).toLocaleString('fr-FR') : '',
+      t.open_price, t.close_price, t.lots,
+      t.pnl_net, t.rr_realized ?? '', t.duration_min ?? '',
+      t.session ?? '', t.status, (t.note ?? '').replace(/"/g, '""'),
+    ])
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = `trades_${new Date().toISOString().slice(0,10)}.csv`
+    a.click(); URL.revokeObjectURL(url)
+  }
+
   // ── No account ──────────────────────────────────────────────────────────────
 
   if (!activeAccountId) {
@@ -272,7 +291,7 @@ export default function Journal() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-4">
       {/* Topbar */}
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-extrabold text-dark">Journal</h1>
@@ -281,6 +300,19 @@ export default function Journal() {
             {trades.length}{hasMore ? '+' : ''} trades
           </span>
         )}
+        <button
+          onClick={exportCSV}
+          disabled={sorted.length === 0}
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-card text-muted text-xs font-medium hover:text-dark hover:bg-subtle transition-all disabled:opacity-40"
+          title="Exporter en CSV"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          CSV
+        </button>
       </div>
 
       {/* Filters */}
@@ -406,7 +438,8 @@ export default function Journal() {
           </div>
         ) : (
           <>
-            <table className="w-full">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
               <thead>
                 <tr className="border-b border-subtle">
                   <SortHeader label="Paire" sortKey="symbol" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} />
@@ -457,6 +490,7 @@ export default function Journal() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Load more */}
             {hasMore && (

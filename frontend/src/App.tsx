@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { lazy, Suspense, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useAuthStore } from './stores/auth'
+import { useThemeStore } from './stores/theme'
 import { AppLayout } from './components/layout/AppLayout'
 import Login from './pages/Login'
 
@@ -14,6 +15,7 @@ const Calendar = lazy(() => import('./pages/Calendar'))
 const Notes = lazy(() => import('./pages/Notes'))
 const Playbook = lazy(() => import('./pages/Playbook'))
 const Settings = lazy(() => import('./pages/Settings'))
+const Calculator = lazy(() => import('./pages/Calculator'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session } = useAuthStore()
@@ -29,12 +31,14 @@ const Spinner = () => (
 
 export default function App() {
   const { setSession } = useAuthStore()
+  const { init: initTheme } = useThemeStore()
 
   useEffect(() => {
+    initTheme()
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, s) => setSession(s))
     return () => subscription.unsubscribe()
-  }, [setSession])
+  }, [setSession, initTheme])
 
   return (
     <BrowserRouter>
@@ -57,6 +61,7 @@ export default function App() {
           <Route path="notes" element={<Suspense fallback={<Spinner />}><Notes /></Suspense>} />
           <Route path="playbook" element={<Suspense fallback={<Spinner />}><Playbook /></Suspense>} />
           <Route path="settings" element={<Suspense fallback={<Spinner />}><Settings /></Suspense>} />
+          <Route path="calculator" element={<Suspense fallback={<Spinner />}><Calculator /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>
