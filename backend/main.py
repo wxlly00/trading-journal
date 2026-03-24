@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
-from routers import accounts, ai, alerts, calculator, export, notes, playbook, stats, trades
+from routers import accounts, ai, alerts, calculator, eco_calendar, export, notes, playbook, stats, trades
 
 app = FastAPI(title="TradeLog API", version="1.0.0")
 
@@ -28,3 +28,4 @@ app.include_router(calculator.router)
 app.include_router(export.router)
 app.include_router(playbook.router)
 app.include_router(ai.router)
+app.include_router(eco_calendar.router)
