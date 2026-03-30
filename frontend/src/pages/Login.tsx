@@ -3,56 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
-  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-    setSuccess('')
-
-    if (mode === 'register') {
-      if (password !== confirm) {
-        setError('Les mots de passe ne correspondent pas.')
-        return
-      }
-      if (password.length < 6) {
-        setError('Le mot de passe doit faire au moins 6 caractères.')
-        return
-      }
-    }
-
     setLoading(true)
-
-    if (mode === 'login') {
-      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-      if (err) setError(err.message)
-      else navigate('/')
-    } else {
-      const { error: err } = await supabase.auth.signUp({ email, password })
-      if (err) {
-        setError(err.message)
-      } else {
-        setSuccess('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.')
-        setEmail('')
-        setPassword('')
-        setConfirm('')
-      }
-    }
-
-    setLoading(false)
-  }
-
-  function switchMode() {
-    setMode(m => m === 'login' ? 'register' : 'login')
     setError('')
-    setSuccess('')
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+    if (err) setError(err.message)
+    else navigate('/')
+    setLoading(false)
   }
 
   return (
@@ -67,14 +31,8 @@ export default function Login() {
           </svg>
           <span className="text-xl font-extrabold text-dark">TradingJournal</span>
         </div>
-
-        <h1 className="text-2xl font-extrabold text-dark mb-1">
-          {mode === 'login' ? 'Connexion' : 'Créer un compte'}
-        </h1>
-        <p className="text-sm text-[#888] mb-6">
-          {mode === 'login' ? 'Accédez à votre journal de trading' : 'Commencez à suivre vos trades'}
-        </p>
-
+        <h1 className="text-2xl font-extrabold text-dark mb-1">Connexion</h1>
+        <p className="text-sm text-[#888] mb-6">Accédez à votre journal de trading</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="text-xs font-semibold text-[#666] block mb-1.5">Email</label>
@@ -87,7 +45,6 @@ export default function Login() {
               required
             />
           </div>
-
           <div>
             <label className="text-xs font-semibold text-[#666] block mb-1.5">Mot de passe</label>
             <input
@@ -99,45 +56,15 @@ export default function Login() {
               required
             />
           </div>
-
-          {mode === 'register' && (
-            <div>
-              <label className="text-xs font-semibold text-[#666] block mb-1.5">Confirmer le mot de passe</label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-dark outline-none border border-transparent focus:border-dark transition-all"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          )}
-
           {error && <p className="text-xs text-red bg-red/5 px-3 py-2 rounded-lg">{error}</p>}
-          {success && <p className="text-xs text-green-600 bg-green-50 px-3 py-2 rounded-lg">{success}</p>}
-
           <button
             type="submit"
             disabled={loading}
             className="bg-dark text-white rounded-xl py-3 text-sm font-bold hover:bg-[#333] transition-all disabled:opacity-50"
           >
-            {loading
-              ? (mode === 'login' ? 'Connexion...' : 'Création...')
-              : (mode === 'login' ? 'Se connecter' : 'Créer mon compte')}
+            {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-
-        <p className="text-xs text-center text-[#888] mt-6">
-          {mode === 'login' ? "Pas encore de compte ?" : "Déjà un compte ?"}
-          {' '}
-          <button
-            onClick={switchMode}
-            className="text-dark font-semibold hover:underline"
-          >
-            {mode === 'login' ? "S'inscrire" : 'Se connecter'}
-          </button>
-        </p>
       </div>
     </div>
   )
