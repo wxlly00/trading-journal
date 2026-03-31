@@ -520,24 +520,24 @@ export default function TradeDetail() {
         </div>
         <div className="flex gap-2">
           {[
-            { score: 1, emoji: '😰', label: 'Très mauvais' },
-            { score: 2, emoji: '😟', label: 'Mauvais' },
-            { score: 3, emoji: '😐', label: 'Neutre' },
-            { score: 4, emoji: '🙂', label: 'Bon' },
-            { score: 5, emoji: '😎', label: 'Excellent' },
-          ].map(({ score, emoji, label }) => (
+            { score: 1, label: 'Très mauvais', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 mx-auto"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M9.5 9.5c0-1 1.5-1.5 2.5-1.5"/></svg> },
+            { score: 2, label: 'Mauvais', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 mx-auto"><circle cx="12" cy="12" r="10"/><path d="M16 15s-1.5-1-4-1-4 1-4 1"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+            { score: 3, label: 'Neutre', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 mx-auto"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+            { score: 4, label: 'Bon', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 mx-auto"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> },
+            { score: 5, label: 'Excellent', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 mx-auto"><circle cx="12" cy="12" r="10"/><path d="M8 12s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/><path d="M10 8.5c.5-.5 1-.8 2-.8s1.5.3 2 .8"/></svg> },
+          ].map(({ score, label, icon }) => (
             <button
               key={score}
               onClick={() => handlePsyClick(score)}
               disabled={psySaving}
               title={label}
-              className={`flex-1 py-3 rounded-xl text-3xl transition-all border-2 disabled:opacity-50 ${
+              className={`flex-1 py-3 rounded-xl transition-all border-2 disabled:opacity-50 ${
                 psyScore === score
-                  ? 'border-dark bg-subtle scale-105'
-                  : 'border-transparent bg-subtle/50 opacity-50 hover:opacity-100'
+                  ? 'border-dark bg-subtle scale-105 text-dark'
+                  : 'border-transparent bg-subtle/50 opacity-50 hover:opacity-100 text-muted'
               }`}
             >
-              {emoji}
+              {icon}
             </button>
           ))}
         </div>

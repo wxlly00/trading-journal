@@ -1,19 +1,21 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-export default function Login() {
-  const [email, setEmail] = useState('')
+export default function ResetPassword() {
   const [password, setPassword] = useState('')
+  const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); return }
+    if (password.length < 6) { setError('Minimum 6 caractères.'); return }
     setLoading(true)
     setError('')
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: err } = await supabase.auth.updateUser({ password })
     if (err) setError(err.message)
     else navigate('/')
     setLoading(false)
@@ -31,22 +33,11 @@ export default function Login() {
           </svg>
           <span className="text-xl font-extrabold text-dark">TradingJournal</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-dark mb-1">Connexion</h1>
-        <p className="text-sm text-[#888] mb-6">Accédez à votre journal de trading</p>
+        <h1 className="text-2xl font-extrabold text-dark mb-1">Nouveau mot de passe</h1>
+        <p className="text-sm text-[#888] mb-6">Choisis un mot de passe sécurisé</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="text-xs font-semibold text-[#666] block mb-1.5">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-dark outline-none border border-transparent focus:border-dark transition-all"
-              placeholder="trader@example.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-[#666] block mb-1.5">Mot de passe</label>
+            <label className="text-xs font-semibold text-[#666] block mb-1.5">Nouveau mot de passe</label>
             <input
               type="password"
               value={password}
@@ -56,10 +47,16 @@ export default function Login() {
               required
             />
           </div>
-          <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-xs text-[#888] hover:text-dark transition-colors">
-              Mot de passe oublié ?
-            </Link>
+          <div>
+            <label className="text-xs font-semibold text-[#666] block mb-1.5">Confirmer</label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              className="w-full bg-surface rounded-xl px-4 py-3 text-sm text-dark outline-none border border-transparent focus:border-dark transition-all"
+              placeholder="••••••••"
+              required
+            />
           </div>
           {error && <p className="text-xs text-red bg-red/5 px-3 py-2 rounded-lg">{error}</p>}
           <button
@@ -67,7 +64,7 @@ export default function Login() {
             disabled={loading}
             className="bg-dark text-white rounded-xl py-3 text-sm font-bold hover:bg-[#333] transition-all disabled:opacity-50"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? 'Mise à jour...' : 'Enregistrer'}
           </button>
         </form>
       </div>

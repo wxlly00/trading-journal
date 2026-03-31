@@ -5,6 +5,8 @@ import { useAuthStore } from './stores/auth'
 import { useThemeStore } from './stores/theme'
 import { AppLayout } from './components/layout/AppLayout'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Journal = lazy(() => import('./pages/Journal'))
@@ -18,6 +20,8 @@ const Settings = lazy(() => import('./pages/Settings'))
 const Calculator = lazy(() => import('./pages/Calculator'))
 const AIAnalysis = lazy(() => import('./pages/AIAnalysis'))
 const EconomicCalendar = lazy(() => import('./pages/EconomicCalendar'))
+const Import = lazy(() => import('./pages/Import'))
+const Rules = lazy(() => import('./pages/Rules'))
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, initialized } = useAuthStore()
@@ -47,6 +51,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/"
           element={
@@ -67,6 +73,8 @@ export default function App() {
           <Route path="calculator" element={<Suspense fallback={<Spinner />}><Calculator /></Suspense>} />
           <Route path="ai" element={<Suspense fallback={<Spinner />}><AIAnalysis /></Suspense>} />
           <Route path="eco-calendar" element={<Suspense fallback={<Spinner />}><EconomicCalendar /></Suspense>} />
+          <Route path="import" element={<Suspense fallback={<Spinner />}><Import /></Suspense>} />
+          <Route path="rules" element={<Suspense fallback={<Spinner />}><Rules /></Suspense>} />
         </Route>
       </Routes>
     </BrowserRouter>
