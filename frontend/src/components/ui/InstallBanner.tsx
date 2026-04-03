@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 
-type OS = 'ios' | 'android' | null
+type OS = 'ios' | 'samsung' | 'android' | null
 
 function detectOS(): OS {
   const ua = navigator.userAgent
   if (/iphone|ipad|ipod/i.test(ua)) return 'ios'
+  if (/SamsungBrowser/i.test(ua)) return 'samsung'
   if (/android/i.test(ua)) return 'android'
   return null
 }
@@ -19,6 +20,7 @@ function isStandalone(): boolean {
 export function InstallBanner() {
   const [visible, setVisible] = useState(false)
   const [os, setOs] = useState<OS>(null)
+
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
@@ -102,14 +104,30 @@ export function InstallBanner() {
                 </li>
               </ol>
             )}
+            {os === 'samsung' && (
+              <ol className="space-y-2.5">
+                <li className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-dark text-white text-[10px] font-bold flex items-center justify-center mt-px">1</span>
+                  <p className="text-xs text-dark leading-relaxed">
+                    Appuie sur le menu <span className="font-semibold">☰</span> en bas de Samsung Internet
+                  </p>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-dark text-white text-[10px] font-bold flex items-center justify-center mt-px">2</span>
+                  <p className="text-xs text-dark leading-relaxed">Appuie sur <span className="font-semibold">« Ajouter page à »</span></p>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-dark text-white text-[10px] font-bold flex items-center justify-center mt-px">3</span>
+                  <p className="text-xs text-dark leading-relaxed">Appuie sur <span className="font-semibold">« Écran d'accueil »</span> puis confirme</p>
+                </li>
+              </ol>
+            )}
             {os === 'android' && (
               <ol className="space-y-2.5">
                 <li className="flex items-start gap-2.5">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-dark text-white text-[10px] font-bold flex items-center justify-center mt-px">1</span>
                   <div className="text-xs text-dark leading-relaxed">
-                    Appuie sur le menu{' '}
-                    <span className="font-semibold">⋮</span>{' '}
-                    en haut à droite de Chrome
+                    Appuie sur le menu <span className="font-semibold">⋮</span> en haut à droite de Chrome
                   </div>
                 </li>
                 <li className="flex items-start gap-2.5">
