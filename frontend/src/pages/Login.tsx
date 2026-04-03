@@ -70,6 +70,12 @@ export default function Login() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
+        <p className="text-xs text-center text-muted mt-6">
+          Pas encore de compte ?{' '}
+          <Link to="/register" className="text-dark font-semibold hover:underline">
+            Créer un compte
+          </Link>
+        </p>
       </div>
     </div>
   )
