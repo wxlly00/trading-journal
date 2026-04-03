@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-// Pseudo → faux email interne (jamais visible par l'utilisateur)
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 function toEmail(username: string) {
   return `${username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')}@tj.app`
 }
@@ -30,29 +31,36 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const u = username.trim()
-    if (u.length < 3) { setError('Le pseudo doit faire au moins 3 caractères.'); return }
-    if (!/^[a-zA-Z0-9_]+$/.test(u)) { setError('Pseudo : lettres, chiffres et _ uniquement.'); return }
     if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); return }
     if (password.length < 6) { setError('Minimum 6 caractères.'); return }
     setLoading(true)
     setError('')
-    const { data, error: err } = await supabase.auth.signUp({
-      email: toEmail(u),
-      password,
-      options: { data: { username: u } },
-    })
-    if (err) {
-      if (err.message.includes('already registered') || err.message.includes('already been registered')) {
-        setError('Ce pseudo est déjà pris.')
-      } else {
-        setError(err.message)
+    try {
+      // 1. Créer l'user via le backend (admin API, zéro email)
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.detail || 'Erreur lors de la création.')
+        setLoading(false)
+        return
       }
-    } else if (data.session) {
-      navigate('/')
-    } else {
-      // Confirmation email désactivée mais pas de session — cas rare
-      setError('Compte créé. Connecte-toi.')
-      navigate('/login')
+      // 2. Connecter directement
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: toEmail(u),
+        password,
+      })
+      if (signInErr) {
+        setError('Compte créé. Connecte-toi.')
+        navigate('/login')
+      } else {
+        navigate('/')
+      }
+    } catch {
+      setError('Erreur réseau. Réessaie.')
     }
     setLoading(false)
   }

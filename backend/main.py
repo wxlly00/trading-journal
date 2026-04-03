@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
-from routers import accounts, ai, alerts, calculator, checklist, eco_calendar, export, notes, playbook, rules, stats, trades
+from routers import accounts, ai, alerts, auth, calculator, checklist, eco_calendar, export, notes, playbook, rules, stats, trades
 
 app = FastAPI(title="TradeLog API", version="1.0.0")
 
@@ -19,6 +19,7 @@ def health():
     return {"status": "ok"}
 
 
+app.include_router(auth.router)
 app.include_router(trades.router)
 app.include_router(stats.router)
 app.include_router(accounts.router)
