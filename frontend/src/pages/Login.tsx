@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-function toEmail(username: string) {
-  return `${username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')}@tj.app`
+function toEmail(input: string) {
+  const s = input.trim()
+  // Email réel → utilisé tel quel (anciens comptes)
+  if (s.includes('@')) return s
+  // Pseudo → faux email interne
+  return `${s.toLowerCase().replace(/[^a-z0-9_]/g, '_')}@tj.app`
 }
 
 export default function Login() {
@@ -42,7 +46,7 @@ export default function Login() {
         <p className="text-sm text-muted mb-6">Accédez à votre journal de trading</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="text-xs font-semibold text-text2 block mb-1.5">Pseudo</label>
+            <label className="text-xs font-semibold text-text2 block mb-1.5">Pseudo ou email</label>
             <input
               type="text"
               value={username}
