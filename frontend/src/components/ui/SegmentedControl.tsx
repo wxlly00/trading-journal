@@ -8,13 +8,15 @@ interface Props {
 
 export function SegmentedControl({ options, value, onChange }: Props) {
   return (
-    <div className="flex gap-1 bg-card rounded-xl p-1">
+    <div className="flex gap-0.5 bg-subtle border border-border rounded-lg p-0.5">
       {options.map((o) => (
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            value === o.value ? 'bg-dark text-white' : 'text-[#888] hover:text-dark'
+          className={`px-3.5 py-1.5 rounded-md text-[12.5px] font-medium transition-all ${
+            value === o.value
+              ? 'bg-card text-dark font-semibold shadow-sm'
+              : 'text-muted hover:text-dark'
           }`}
         >
           {o.label}

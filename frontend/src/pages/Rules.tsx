@@ -91,7 +91,7 @@ export default function Rules() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-dark">Règles de trading</h1>
-          <p className="text-sm text-[#888] mt-0.5">{activeCount} règles actives · {totalViolations} violations totales</p>
+          <p className="text-sm text-muted mt-0.5">{activeCount} règles actives · {totalViolations} violations totales</p>
         </div>
         <button
           onClick={() => setAdding(true)}
@@ -104,7 +104,6 @@ export default function Rules() {
         </button>
       </div>
 
-      {/* Stats bar */}
       {rules.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -112,17 +111,16 @@ export default function Rules() {
             { label: 'Actives', value: activeCount },
             { label: 'Violations', value: totalViolations },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-card rounded-2xl p-4 text-center">
+            <div key={label} className="bg-card border border-border rounded-xl p-4 text-center">
               <p className="text-2xl font-black text-dark">{value}</p>
-              <p className="text-xs text-[#888] mt-0.5">{label}</p>
+              <p className="text-xs text-muted mt-0.5">{label}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Add form */}
       {adding && (
-        <div className="bg-card rounded-2xl p-5 space-y-3">
+        <div className="bg-card border border-border rounded-xl p-5 space-y-3">
           <p className="text-sm font-bold text-dark">Nouvelle règle</p>
           <input
             type="text"
@@ -166,15 +164,14 @@ export default function Rules() {
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && rules.length === 0 && !adding && (
-        <div className="bg-card rounded-2xl p-8 text-center space-y-4">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-[#ccc] mx-auto">
+        <div className="bg-card border border-border rounded-xl p-8 text-center space-y-4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-12 h-12 text-muted mx-auto">
             <path d="M9 11l3 3L22 4"/>
             <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
           </svg>
           <p className="text-sm font-medium text-dark">Aucune règle définie</p>
-          <p className="text-xs text-[#888]">Les règles t'aident à rester discipliné et à tracker tes violations</p>
+          <p className="text-xs text-muted">Les règles t'aident à rester discipliné et à tracker tes violations</p>
           <button
             onClick={addDefaultRules}
             disabled={saving}
@@ -185,7 +182,6 @@ export default function Rules() {
         </div>
       )}
 
-      {/* Rules list grouped by category */}
       {!loading && rules.length > 0 && (
         <div className="space-y-2">
           {rules
@@ -193,9 +189,8 @@ export default function Rules() {
             .map(rule => (
             <div
               key={rule.id}
-              className={`bg-card rounded-2xl p-4 flex items-start gap-3 transition-opacity ${!rule.active ? 'opacity-50' : ''}`}
+              className={`bg-card border border-border rounded-xl p-4 flex items-start gap-3 transition-opacity ${!rule.active ? 'opacity-50' : ''}`}
             >
-              {/* Toggle */}
               <button
                 onClick={() => handleToggle(rule)}
                 className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
@@ -218,20 +213,19 @@ export default function Rules() {
                         {rule.violations}x
                       </span>
                     )}
-                    <span className="text-[10px] font-medium text-[#888] bg-subtle px-2 py-0.5 rounded-full capitalize">
+                    <span className="text-[10px] font-medium text-muted bg-subtle px-2 py-0.5 rounded-full capitalize">
                       {CATEGORIES.find(c => c.value === rule.category)?.label ?? rule.category}
                     </span>
                   </div>
                 </div>
                 {rule.description && (
-                  <p className="text-xs text-[#888] mt-1">{rule.description}</p>
+                  <p className="text-xs text-muted mt-1">{rule.description}</p>
                 )}
               </div>
 
-              {/* Delete */}
               <button
                 onClick={() => handleDelete(rule.id)}
-                className="text-[#ccc] hover:text-red transition-colors flex-shrink-0"
+                className="text-muted hover:text-red transition-colors flex-shrink-0"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                   <polyline points="3 6 5 6 21 6"/>
@@ -248,7 +242,7 @@ export default function Rules() {
       {loading && (
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-card rounded-2xl p-4 h-16 animate-pulse" />
+            <div key={i} className="bg-card border border-border rounded-xl p-4 h-16 animate-pulse" />
           ))}
         </div>
       )}

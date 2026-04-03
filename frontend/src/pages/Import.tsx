@@ -44,12 +44,11 @@ export default function Import() {
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-extrabold text-dark">Import CSV</h1>
-        <p className="text-sm text-[#888] mt-1">Importe ton historique depuis MT4, MT5, cTrader ou n'importe quel broker</p>
+        <p className="text-sm text-muted mt-1">Importe ton historique depuis MT4, MT5, cTrader ou n'importe quel broker</p>
       </div>
 
-      {/* Format guide */}
-      <div className="bg-card rounded-2xl p-5 space-y-3">
-        <p className="text-xs font-semibold text-[#999] uppercase tracking-wider">Formats supportés</p>
+      <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+        <p className="text-xs font-semibold text-muted uppercase tracking-wider">Formats supportés</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
             { name: 'MetaTrader 5', steps: ['Ouvre MT5', 'Historique → clic droit', '"Enregistrer sous" → CSV'] },
@@ -60,7 +59,7 @@ export default function Import() {
               <p className="text-xs font-bold text-dark mb-2">{name}</p>
               <ol className="space-y-1">
                 {steps.map((s, i) => (
-                  <li key={i} className="text-[11px] text-[#888] flex gap-1.5">
+                  <li key={i} className="text-[11px] text-muted flex gap-1.5">
                     <span className="text-dark font-bold">{i + 1}.</span>{s}
                   </li>
                 ))}
@@ -70,13 +69,12 @@ export default function Import() {
         </div>
       </div>
 
-      {/* Drop zone */}
       <div
         onDragOver={e => { e.preventDefault(); setDragging(true) }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
         onClick={() => fileRef.current?.click()}
-        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all ${
+        className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-all ${
           dragging ? 'border-dark bg-subtle' : 'border-border hover:border-dark/40'
         }`}
       >
@@ -87,7 +85,7 @@ export default function Import() {
           className="hidden"
           onChange={e => setFile(e.target.files?.[0] ?? null)}
         />
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-[#ccc] mx-auto mb-3">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 text-muted mx-auto mb-3">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="17 8 12 3 7 8"/>
           <line x1="12" y1="3" x2="12" y2="15"/>
@@ -95,19 +93,18 @@ export default function Import() {
         {file ? (
           <div>
             <p className="text-sm font-semibold text-dark">{file.name}</p>
-            <p className="text-xs text-[#888] mt-1">{(file.size / 1024).toFixed(1)} Ko</p>
+            <p className="text-xs text-muted mt-1">{(file.size / 1024).toFixed(1)} Ko</p>
           </div>
         ) : (
           <div>
             <p className="text-sm font-medium text-dark">Glisse ton fichier CSV ici</p>
-            <p className="text-xs text-[#888] mt-1">ou clique pour parcourir</p>
+            <p className="text-xs text-muted mt-1">ou clique pour parcourir</p>
           </div>
         )}
       </div>
 
-      {/* Result */}
       {result && (
-        <div className="bg-green-50 dark:bg-green-950/30 rounded-2xl p-5">
+        <div className="bg-green-50 dark:bg-green-950/30 border border-border rounded-xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" className="w-5 h-5">
               <polyline points="20 6 9 17 4 12"/>
@@ -117,15 +114,15 @@ export default function Import() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
               <p className="text-2xl font-black text-dark">{result.imported}</p>
-              <p className="text-xs text-[#888]">importés</p>
+              <p className="text-xs text-muted">importés</p>
             </div>
             <div>
               <p className="text-2xl font-black text-dark">{result.skipped}</p>
-              <p className="text-xs text-[#888]">ignorés</p>
+              <p className="text-xs text-muted">ignorés</p>
             </div>
             <div>
               <p className="text-2xl font-black text-dark">{result.total}</p>
-              <p className="text-xs text-[#888]">total</p>
+              <p className="text-xs text-muted">total</p>
             </div>
           </div>
           <button
@@ -138,7 +135,7 @@ export default function Import() {
       )}
 
       {error && (
-        <div className="bg-red/5 rounded-2xl p-4">
+        <div className="bg-red/5 border border-border rounded-xl p-4">
           <p className="text-sm text-red font-medium">{error}</p>
         </div>
       )}
@@ -159,7 +156,7 @@ export default function Import() {
       )}
 
       {!activeAccountId && (
-        <p className="text-xs text-center text-[#888]">
+        <p className="text-xs text-center text-muted">
           Sélectionne un compte dans les paramètres pour pouvoir importer.
         </p>
       )}

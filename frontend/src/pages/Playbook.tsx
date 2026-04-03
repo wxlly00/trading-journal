@@ -31,9 +31,6 @@ function formatDate(iso: string): string {
   })
 }
 
-// ---------------------------------------------------------------------------
-// Entry Card
-// ---------------------------------------------------------------------------
 interface EntryCardProps {
   entry: LearningEntry
   onUpdate: (updated: LearningEntry) => void
@@ -70,7 +67,6 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
       onUpdate(updated)
       setEditing(false)
     } catch {
-      // ignore
     } finally {
       setSaving(false)
     }
@@ -94,8 +90,7 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
   }
 
   return (
-    <div className="bg-card rounded-2xl overflow-hidden border border-transparent hover:border-subtle transition-colors">
-      {/* Header row — always visible */}
+    <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-dark/30 transition-colors">
       <button
         className="w-full text-left px-5 py-4"
         onClick={() => !editing && setExpanded((v) => !v)}
@@ -134,7 +129,6 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
         </div>
       </button>
 
-      {/* Expanded body */}
       {expanded && (
         <div className="px-5 pb-5 border-t border-subtle">
           {editing ? (
@@ -152,7 +146,6 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
                 rows={6}
                 className="w-full px-3 py-2 rounded-xl border border-subtle bg-surface text-sm text-dark outline-none focus:border-dark transition-colors resize-none leading-relaxed"
               />
-              {/* Tags */}
               <div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {tags.map((t) => (
@@ -186,7 +179,6 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
                   </button>
                 </div>
               </div>
-              {/* Actions */}
               <div className="flex gap-2 pt-1">
                 <button
                   onClick={handleSave}
@@ -254,9 +246,6 @@ function EntryCard({ entry, onUpdate, onDelete }: EntryCardProps) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Drawing Modal
-// ---------------------------------------------------------------------------
 interface DrawingModalProps {
   drawing: Drawing | null
   onClose: () => void
@@ -265,7 +254,6 @@ interface DrawingModalProps {
 }
 
 function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [excalidrawAPI, setExcalidrawAPI] = useState<any>(null)
   const [saving, setSaving] = useState(false)
 
@@ -281,7 +269,6 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const initialData: any = drawing?.data
     ? {
         elements: (drawing.data as { elements?: unknown[] }).elements ?? [],
@@ -291,8 +278,7 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl overflow-hidden flex flex-col w-full max-w-5xl h-[90vh] shadow-2xl">
-        {/* Modal header */}
+      <div className="bg-white border border-border rounded-xl overflow-hidden flex flex-col w-full max-w-5xl h-[90vh] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-subtle flex-shrink-0">
           <h3 className="font-semibold text-dark text-sm">{title}</h3>
           <div className="flex items-center gap-2">
@@ -314,7 +300,6 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
             </button>
           </div>
         </div>
-        {/* Excalidraw */}
         <div className="flex-1 overflow-hidden">
           <Suspense
             fallback={
@@ -323,7 +308,6 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
               </div>
             }
           >
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             <ExcalidrawComponent
               excalidrawAPI={(api: any) => setExcalidrawAPI(api)}
               initialData={initialData}
@@ -335,9 +319,6 @@ function DrawingModal({ drawing, onClose, onSave, title }: DrawingModalProps) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// New Entry Form
-// ---------------------------------------------------------------------------
 interface NewEntryFormProps {
   onSubmit: (title: string, content: string, tags: string[]) => Promise<void>
   onCancel: () => void
@@ -368,7 +349,7 @@ function NewEntryForm({ onSubmit, onCancel }: NewEntryFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card rounded-2xl p-5 space-y-3 border-2 border-dark">
+    <form onSubmit={handleSubmit} className="bg-card border-2 border-dark rounded-xl p-5 space-y-3">
       <h3 className="font-semibold text-dark text-sm">Nouvelle entrée</h3>
       <input
         value={title}
@@ -439,19 +420,14 @@ function NewEntryForm({ onSubmit, onCancel }: NewEntryFormProps) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
 export default function Playbook() {
   const { activeAccountId } = useAccountStore()
   const [tab, setTab] = useState<Tab>('entries')
 
-  // Entries
   const [entries, setEntries] = useState<LearningEntry[]>([])
   const [loadingEntries, setLoadingEntries] = useState(true)
   const [showNewEntry, setShowNewEntry] = useState(false)
 
-  // Drawings
   const [drawings, setDrawings] = useState<Drawing[]>([])
   const [loadingDrawings, setLoadingDrawings] = useState(true)
   const [modalDrawing, setModalDrawing] = useState<Drawing | null | 'new'>(null)
@@ -546,13 +522,11 @@ export default function Playbook() {
 
   return (
     <div className="p-4 md:p-6">
-      {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 md:mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-dark">Playbook</h1>
           <p className="text-muted text-sm mt-1">Vos stratégies et setups de trading</p>
         </div>
-        {/* Tabs */}
         <div className="flex gap-1 bg-subtle p-1 rounded-xl">
           <button
             onClick={() => setTab('entries')}
@@ -573,10 +547,8 @@ export default function Playbook() {
         </div>
       </div>
 
-      {/* ENTRIES TAB */}
       {tab === 'entries' && (
         <div className="space-y-3">
-          {/* Toolbar */}
           <div className="flex justify-end">
             {!showNewEntry && (
               <button
@@ -592,7 +564,6 @@ export default function Playbook() {
             )}
           </div>
 
-          {/* New entry form */}
           {showNewEntry && (
             <NewEntryForm
               onSubmit={handleCreateEntry}
@@ -600,11 +571,10 @@ export default function Playbook() {
             />
           )}
 
-          {/* List */}
           {loadingEntries ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card rounded-2xl p-5 animate-pulse">
+                <div key={i} className="bg-card border border-border rounded-xl p-5 animate-pulse">
                   <div className="h-3 w-48 bg-subtle rounded mb-3" />
                   <div className="space-y-2">
                     <div className="h-2 w-full bg-subtle rounded" />
@@ -614,7 +584,7 @@ export default function Playbook() {
               ))}
             </div>
           ) : entries.length === 0 ? (
-            <div className="bg-card rounded-2xl p-10 text-center text-muted text-sm">
+            <div className="bg-card border border-border rounded-xl p-10 text-center text-muted text-sm">
               Aucune entrée pour le moment. Créez votre première entrée !
             </div>
           ) : (
@@ -632,10 +602,8 @@ export default function Playbook() {
         </div>
       )}
 
-      {/* DRAWINGS TAB */}
       {tab === 'drawings' && (
         <div className="space-y-4">
-          {/* Toolbar */}
           <div className="flex items-center justify-end gap-2">
             {showNewDrawingInput ? (
               <div className="flex items-center gap-2">
@@ -675,18 +643,17 @@ export default function Playbook() {
             )}
           </div>
 
-          {/* Grid */}
           {loadingDrawings ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-card rounded-2xl p-5 animate-pulse">
+                <div key={i} className="bg-card border border-border rounded-xl p-5 animate-pulse">
                   <div className="h-32 bg-subtle rounded-xl mb-3" />
                   <div className="h-3 w-28 bg-subtle rounded" />
                 </div>
               ))}
             </div>
           ) : drawings.length === 0 ? (
-            <div className="bg-card rounded-2xl p-10 text-center text-muted text-sm">
+            <div className="bg-card border border-border rounded-xl p-10 text-center text-muted text-sm">
               Aucun dessin pour le moment. Créez votre premier dessin !
             </div>
           ) : (
@@ -694,10 +661,9 @@ export default function Playbook() {
               {drawings.map((drawing) => (
                 <div
                   key={drawing.id}
-                  className="bg-card rounded-2xl p-4 group cursor-pointer hover:shadow-md transition-shadow"
+                  className="bg-card border border-border rounded-xl p-4 group cursor-pointer hover:shadow-md transition-shadow"
                   onClick={() => setModalDrawing(drawing)}
                 >
-                  {/* Thumbnail placeholder */}
                   <div className="h-32 bg-subtle rounded-xl mb-3 flex items-center justify-center">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-muted">
                       <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
@@ -728,7 +694,6 @@ export default function Playbook() {
         </div>
       )}
 
-      {/* Drawing Modal */}
       {modalDrawing !== null && (
         <DrawingModal
           drawing={modalDrawing === 'new' ? null : modalDrawing}

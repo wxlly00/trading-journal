@@ -44,7 +44,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-card rounded-2xl p-5 ${className}`}>
+    <div className={`bg-card border border-border rounded-xl p-5 ${className}`}>
       {children}
     </div>
   )
@@ -70,7 +70,7 @@ function RotateKeyModal({ apiKey, onClose }: RotateKeyModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div className="bg-card border border-border rounded-xl p-6 w-full max-w-md">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-dark">Nouvelle clé API</h3>
           <button
@@ -311,7 +311,7 @@ export default function Settings() {
           {loadingAccounts ? (
             <div className="space-y-2">
               {[1, 2].map((i) => (
-                <div key={i} className="bg-card rounded-2xl p-4 animate-pulse">
+                <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
                   <div className="h-3 w-32 bg-subtle rounded mb-2" />
                   <div className="h-2 w-48 bg-subtle rounded" />
                 </div>
@@ -476,7 +476,7 @@ export default function Settings() {
               ) : (
                 <button
                   onClick={() => setShowNewAccountForm(true)}
-                  className="flex items-center gap-2 w-full px-4 py-3 rounded-2xl border-2 border-dashed border-subtle text-muted text-sm font-medium hover:border-dark hover:text-dark transition-colors"
+                  className="flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-dashed border-subtle text-muted text-sm font-medium hover:border-dark hover:text-dark transition-colors"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
                     <line x1="12" y1="5" x2="12" y2="19" />
@@ -645,7 +645,7 @@ export default function Settings() {
             {loadingAlerts ? (
               <div className="space-y-2">
                 {[1, 2].map((i) => (
-                  <div key={i} className="bg-card rounded-2xl p-4 animate-pulse">
+                  <div key={i} className="bg-card border border-border rounded-xl p-4 animate-pulse">
                     <div className="h-3 w-40 bg-subtle rounded" />
                   </div>
                 ))}
@@ -704,7 +704,7 @@ export default function Settings() {
                 ) : (
                   <button
                     onClick={() => setShowNewAlertForm(true)}
-                    className="flex items-center gap-2 w-full px-4 py-3 rounded-2xl border-2 border-dashed border-subtle text-muted text-sm font-medium hover:border-dark hover:text-dark transition-colors"
+                    className="flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 border-dashed border-subtle text-muted text-sm font-medium hover:border-dark hover:text-dark transition-colors"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
                       <line x1="12" y1="5" x2="12" y2="19" />
@@ -826,7 +826,7 @@ function AlertRow({ alert, onToggle, onUpdateThreshold, onDelete }: AlertRowProp
   }
 
   return (
-    <div className="bg-card rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+    <div className="bg-card border border-border rounded-xl px-5 py-4 flex items-center justify-between gap-4">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-dark">
           {ALERT_LABELS[alert.type] ?? alert.type}

@@ -52,7 +52,6 @@ function InputField({
           max={max}
           step={step ?? 'any'}
           className="w-full px-4 py-3 bg-subtle rounded-xl text-dark text-base font-medium outline-none focus:ring-2 focus:ring-dark/20 transition-all"
-          style={{ fontSize: '16px' /* prevent iOS zoom */ }}
         />
         {suffix && (
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-sm font-medium pointer-events-none">
@@ -107,7 +106,6 @@ export default function Calculator() {
         <p className="text-muted text-sm mt-0.5">Taille de position optimale</p>
       </div>
 
-      {/* Instrument selector */}
       <div>
         <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
           Instrument
@@ -129,7 +127,6 @@ export default function Calculator() {
         </div>
       </div>
 
-      {/* Inputs */}
       <div className="space-y-4">
         <InputField
           label="Capital du compte"
@@ -160,24 +157,23 @@ export default function Calculator() {
         />
       </div>
 
-      {/* Result card */}
       {result ? (
-        <div className="bg-dark rounded-2xl p-6 space-y-4">
+        <div className="bg-dark border border-border rounded-xl p-6 space-y-4">
           <div className="text-center">
-            <p className="text-[#666] text-xs font-semibold uppercase tracking-wider mb-1">
+            <p className="text-text2 text-xs font-semibold uppercase tracking-wider mb-1">
               Taille de position
             </p>
             <p className="text-5xl font-black text-white">{result.lotRounded}</p>
-            <p className="text-[#555] text-sm mt-1">lots</p>
+            <p className="text-muted text-sm mt-1">lots</p>
           </div>
 
           <div className="border-t border-white/10 pt-4 grid grid-cols-2 gap-4">
             <div className="text-center">
-              <p className="text-[#555] text-xs uppercase tracking-wider mb-0.5">Montant risqué</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-0.5">Montant risqué</p>
               <p className={`text-xl font-bold ${riskColor}`}>${result.riskAmount}</p>
             </div>
             <div className="text-center">
-              <p className="text-[#555] text-xs uppercase tracking-wider mb-0.5">Lots exacts</p>
+              <p className="text-muted text-xs uppercase tracking-wider mb-0.5">Lots exacts</p>
               <p className="text-xl font-bold text-white">{result.lotSize}</p>
             </div>
           </div>
@@ -193,13 +189,12 @@ export default function Calculator() {
           )}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl p-8 text-center text-muted text-sm">
+        <div className="bg-card border border-border rounded-xl p-8 text-center text-muted text-sm">
           Remplissez les champs pour calculer
         </div>
       )}
 
-      {/* Risk guide */}
-      <div className="bg-card rounded-2xl p-4 space-y-2">
+      <div className="bg-card border border-border rounded-xl p-4 space-y-2">
         <p className="text-xs font-semibold text-muted uppercase tracking-wider">Guide du risque</p>
         <div className="space-y-1.5">
           {[

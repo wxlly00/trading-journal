@@ -61,8 +61,8 @@ interface TooltipState {
 
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-card rounded-2xl p-5">
-      <p className="text-[#888] text-xs font-medium uppercase tracking-wide mb-2">{label}</p>
+    <div className="bg-card border border-border rounded-xl p-5">
+      <p className="text-muted text-xs font-medium uppercase tracking-wide mb-2">{label}</p>
       <p
         className="text-2xl font-bold"
         style={{ color: color ?? '#111' }}
@@ -107,7 +107,6 @@ export default function Stats() {
       .finally(() => setLoading(false))
   }, [activeAccountId])
 
-  // Build 5×24 grid: grid[weekday][hour] = cell or null
   const grid: (HeatmapCell | null)[][] = Array.from({ length: 5 }, () =>
     Array(24).fill(null)
   )
@@ -155,7 +154,7 @@ export default function Stats() {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-extrabold text-[#111]">Statistiques</h1>
-        <p className="text-[#888] text-sm mt-4">Sélectionnez un compte pour voir les statistiques.</p>
+        <p className="text-muted text-sm mt-4">Sélectionnez un compte pour voir les statistiques.</p>
       </div>
     )
   }
@@ -166,14 +165,14 @@ export default function Stats() {
         <h1 className="text-2xl font-extrabold text-[#111]">Statistiques</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-5 animate-pulse h-24" />
+            <div key={i} className="bg-card border border-border rounded-xl p-5 animate-pulse h-24" />
           ))}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl p-5 animate-pulse h-48" />
-          <div className="bg-white rounded-2xl p-5 animate-pulse h-48" />
+          <div className="bg-card border border-border rounded-xl p-5 animate-pulse h-48" />
+          <div className="bg-card border border-border rounded-xl p-5 animate-pulse h-48" />
         </div>
-        <div className="bg-white rounded-2xl p-5 animate-pulse h-56" />
+        <div className="bg-card border border-border rounded-xl p-5 animate-pulse h-56" />
       </div>
     )
   }
@@ -182,7 +181,7 @@ export default function Stats() {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-extrabold text-[#111]">Statistiques</h1>
-        <div className="mt-6 bg-white rounded-2xl p-5 text-[#ef4444]">Erreur : {error}</div>
+        <div className="mt-6 bg-card border border-border rounded-xl p-5 text-[#ef4444]">Erreur : {error}</div>
       </div>
     )
   }
@@ -191,7 +190,6 @@ export default function Stats() {
     <div className="p-4 md:p-6 space-y-6">
       <h1 className="text-2xl font-extrabold text-dark">Statistiques</h1>
 
-      {/* Row 1 — 6 stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
           label="Gain moyen"
@@ -247,10 +245,8 @@ export default function Stats() {
         />
       </div>
 
-      {/* Row 2 — Sessions + Streaks */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Sessions */}
-        <div className="bg-card rounded-2xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5">
           <p className="text-[#111] font-semibold mb-4">Sessions de trading</p>
           <div className="space-y-3">
             {sessions
@@ -264,7 +260,7 @@ export default function Stats() {
                       <span className="text-sm font-medium text-[#111]">
                         {SESSION_LABELS[s.session] ?? s.session}
                       </span>
-                      <div className="flex items-center gap-3 text-xs text-[#888]">
+                      <div className="flex items-center gap-3 text-xs text-muted">
                         <span>{s.trades} trades</span>
                         <span>{fmtPct(s.win_rate * 100)} WR</span>
                         <span
@@ -288,53 +284,50 @@ export default function Stats() {
                 )
               })}
             {sessions.length === 0 && (
-              <p className="text-[#888] text-sm">Aucune donnée de session.</p>
+              <p className="text-muted text-sm">Aucune donnée de session.</p>
             )}
           </div>
         </div>
 
-        {/* Streaks */}
-        <div className="bg-card rounded-2xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5">
           <p className="text-[#111] font-semibold mb-4">Séries</p>
           {streaks ? (
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col items-center justify-center bg-[#f5f5f5] rounded-xl p-4">
                 <p className="text-4xl font-black text-[#22c55e]">{streaks.max_win_streak}</p>
-                <p className="text-xs text-[#888] mt-2 text-center">Max gains consécutifs</p>
+                <p className="text-xs text-muted mt-2 text-center">Max gains consécutifs</p>
               </div>
               <div className="flex flex-col items-center justify-center bg-[#f5f5f5] rounded-xl p-4">
                 <p className="text-4xl font-black text-[#ef4444]">{streaks.max_loss_streak}</p>
-                <p className="text-xs text-[#888] mt-2 text-center">Max pertes consécutives</p>
+                <p className="text-xs text-muted mt-2 text-center">Max pertes consécutives</p>
               </div>
               <div className="flex flex-col items-center justify-center bg-[#f5f5f5] rounded-xl p-4">
                 <p className="text-4xl font-black" style={{ color: streaks.current_win > 0 ? '#22c55e' : '#999' }}>
                   {streaks.current_win}
                 </p>
-                <p className="text-xs text-[#888] mt-2 text-center">Streak win actuel</p>
+                <p className="text-xs text-muted mt-2 text-center">Streak win actuel</p>
               </div>
               <div className="flex flex-col items-center justify-center bg-[#f5f5f5] rounded-xl p-4">
                 <p className="text-4xl font-black" style={{ color: streaks.current_loss > 0 ? '#ef4444' : '#999' }}>
                   {streaks.current_loss}
                 </p>
-                <p className="text-xs text-[#888] mt-2 text-center">Streak loss actuel</p>
+                <p className="text-xs text-muted mt-2 text-center">Streak loss actuel</p>
               </div>
             </div>
           ) : (
-            <p className="text-[#888] text-sm">Aucune donnée de série.</p>
+            <p className="text-muted text-sm">Aucune donnée de série.</p>
           )}
         </div>
       </div>
 
-      {/* Row 3 — Heatmap */}
-      <div className="bg-card rounded-2xl p-5 overflow-x-auto">
+      <div className="bg-card border border-border rounded-xl p-5 overflow-x-auto">
         <p className="text-[#111] font-semibold mb-4">Heatmap horaire</p>
         <div ref={heatmapRef} className="relative" style={{ minWidth: 680 }}>
-          {/* Hour labels */}
           <div className="flex ml-10 mb-1">
             {HOURS.map((h) => (
               <div
                 key={h}
-                className="text-center text-[10px] text-[#999] font-medium"
+                className="text-center text-[10px] text-muted font-medium"
                 style={{ width: `${100 / 24}%` }}
               >
                 {h % 3 === 0 ? String(h).padStart(2, '0') : ''}
@@ -342,10 +335,9 @@ export default function Stats() {
             ))}
           </div>
 
-          {/* Grid rows */}
           {WEEKDAY_LABELS.map((day, wi) => (
             <div key={wi} className="flex items-center mb-0.5">
-              <div className="w-10 text-[11px] text-[#888] font-medium shrink-0">{day}</div>
+              <div className="w-10 text-[11px] text-muted font-medium shrink-0">{day}</div>
               <div className="flex flex-1 gap-0.5">
                 {HOURS.map((h) => {
                   const cell = grid[wi][h]
@@ -367,7 +359,6 @@ export default function Stats() {
             </div>
           ))}
 
-          {/* Tooltip */}
           {tooltip && (
             <div
               className="absolute pointer-events-none z-10 bg-[#111] text-white text-xs rounded-lg px-3 py-2 shadow-lg whitespace-nowrap"
@@ -383,24 +374,23 @@ export default function Stats() {
               <div className="mt-0.5" style={{ color: tooltip.pnl >= 0 ? '#22c55e' : '#ef4444' }}>
                 {fmtPnl(tooltip.pnl)}
               </div>
-              <div className="text-[#999]">{tooltip.count} trade{tooltip.count > 1 ? 's' : ''}</div>
+              <div className="text-muted">{tooltip.count} trade{tooltip.count > 1 ? 's' : ''}</div>
             </div>
           )}
         </div>
 
-        {/* Legend */}
         <div className="flex items-center gap-4 mt-3 ml-10">
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#22c55e]" />
-            <span className="text-[11px] text-[#888]">Positif</span>
+            <span className="text-[11px] text-muted">Positif</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#ef4444]" />
-            <span className="text-[11px] text-[#888]">Négatif</span>
+            <span className="text-[11px] text-muted">Négatif</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-sm bg-[#f0f0f0]" />
-            <span className="text-[11px] text-[#888]">Vide</span>
+            <span className="text-[11px] text-muted">Vide</span>
           </div>
         </div>
       </div>

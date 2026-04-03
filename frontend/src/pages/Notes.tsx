@@ -149,7 +149,7 @@ export default function Notes() {
       {/* Body: two panels */}
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden px-4 md:px-6 pb-4 md:pb-6 gap-3 md:gap-4">
         {/* Left panel: date list — horizontal scroll on mobile, sidebar on desktop */}
-        <div className="md:w-[220px] md:flex-shrink-0 bg-card rounded-2xl overflow-hidden flex flex-col md:h-auto h-auto max-h-40 md:max-h-none">
+        <div className="md:w-[220px] md:flex-shrink-0 bg-card border border-border rounded-xl overflow-hidden flex flex-col md:h-auto h-auto max-h-40 md:max-h-none">
           <div className="p-3 border-b border-subtle flex-shrink-0">
             <button
               onClick={jumpToToday}
@@ -209,7 +209,7 @@ export default function Notes() {
         </div>
 
         {/* Right panel: editor */}
-        <div className="flex-1 bg-card rounded-2xl flex flex-col overflow-hidden">
+        <div className="flex-1 bg-card border border-border rounded-xl flex flex-col overflow-hidden">
           {/* Date header */}
           <div className="px-6 py-4 border-b border-subtle flex items-center justify-between flex-shrink-0">
             <div>

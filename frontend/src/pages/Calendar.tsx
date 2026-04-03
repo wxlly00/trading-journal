@@ -32,7 +32,6 @@ function toYYYYMMDD(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-// Returns ISO weekday index 0=Mon…6=Sun for a given Date
 function isoWeekday(d: Date): number {
   return (d.getDay() + 6) % 7
 }
@@ -42,12 +41,10 @@ function buildCalendarGrid(year: number, month: number, dataMap: Record<string, 
   const firstDay = new Date(year, month, 1)
   const lastDay = new Date(year, month + 1, 0)
 
-  // Pad start to Monday
   const startOffset = isoWeekday(firstDay)
   const gridStart = new Date(firstDay)
   gridStart.setDate(gridStart.getDate() - startOffset)
 
-  // Pad end to Sunday (complete last row)
   const endOffset = 6 - isoWeekday(lastDay)
   const gridEnd = new Date(lastDay)
   gridEnd.setDate(gridEnd.getDate() + endOffset)
@@ -127,7 +124,6 @@ export default function Calendar() {
 
   const weeks = buildCalendarGrid(year, month, dataMap)
 
-  // Summary stats
   const monthDays = dayData.filter((d) => {
     const ym = d.date.slice(0, 7)
     return ym === toYYYYMM(year, month)
@@ -140,31 +136,30 @@ export default function Calendar() {
   if (!activeAccountId) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-extrabold text-[#111]">Calendrier</h1>
-        <p className="text-[#888] text-sm mt-4">Sélectionnez un compte pour voir le calendrier.</p>
+        <h1 className="text-2xl font-extrabold text-dark">Calendrier</h1>
+        <p className="text-muted text-sm mt-4">Sélectionnez un compte pour voir le calendrier.</p>
       </div>
     )
   }
 
   return (
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-      {/* Header + month navigation */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-[#111]">Calendrier</h1>
+        <h1 className="text-2xl font-extrabold text-dark">Calendrier</h1>
         <div className="flex items-center gap-3">
           <button
             onClick={prevMonth}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-[#f5f5f5] transition-colors text-[#111]"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-[#f5f5f5] transition-colors text-dark"
             aria-label="Mois précédent"
           >
             ‹
           </button>
-          <span className="text-sm font-semibold text-[#111] w-36 text-center">
+          <span className="text-sm font-semibold text-dark w-36 text-center">
             {MONTH_NAMES_FR[month]} {year}
           </span>
           <button
             onClick={nextMonth}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-[#f5f5f5] transition-colors text-[#111]"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-[#f5f5f5] transition-colors text-dark"
             aria-label="Mois suivant"
           >
             ›
@@ -172,9 +167,7 @@ export default function Calendar() {
         </div>
       </div>
 
-      {/* Calendar card */}
-      <div className="bg-card rounded-2xl overflow-hidden">
-        {/* Weekday headers */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="grid grid-cols-7 border-b border-border">
           {WEEKDAY_HEADERS.map((d) => (
             <div
@@ -186,7 +179,6 @@ export default function Calendar() {
           ))}
         </div>
 
-        {/* Day grid */}
         {loading ? (
           <div className="grid grid-cols-7">
             {Array.from({ length: 35 }).map((_, i) => (
@@ -218,7 +210,6 @@ export default function Calendar() {
                         .filter(Boolean)
                         .join(' ')}
                     >
-                      {/* Day number */}
                       <span
                         className={[
                           'text-[10px] md:text-xs font-semibold',
@@ -228,7 +219,6 @@ export default function Calendar() {
                         {day.dayNum}
                       </span>
 
-                      {/* P&L amount — desktop only */}
                       {hasTrade && (
                         <div className="mt-1 hidden md:block">
                           <span
@@ -240,14 +230,12 @@ export default function Calendar() {
                         </div>
                       )}
 
-                      {/* Mobile: colored bottom bar instead of text */}
                       {hasTrade && (
                         <div
                           className={`md:hidden absolute bottom-0 left-0 right-0 h-1 ${isPos ? 'bg-green' : 'bg-red'}`}
                         />
                       )}
 
-                      {/* Desktop dot */}
                       {hasTrade && (
                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 hidden md:block">
                           <div
@@ -265,11 +253,10 @@ export default function Calendar() {
         )}
       </div>
 
-      {/* Summary row */}
       {!loading && !error && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-[10px] uppercase tracking-wider text-[#888] font-medium mb-1">P&L du mois</p>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted font-medium mb-1">P&L du mois</p>
             <p
               className="text-xl font-bold"
               style={{ color: totalPnl >= 0 ? '#22c55e' : '#ef4444' }}
@@ -277,16 +264,16 @@ export default function Calendar() {
               {tradingDays > 0 ? fmtPnl(totalPnl) : '—'}
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-[10px] uppercase tracking-wider text-[#888] font-medium mb-1">Jours tradés</p>
-            <p className="text-xl font-bold text-[#111]">{tradingDays}</p>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted font-medium mb-1">Jours tradés</p>
+            <p className="text-xl font-bold text-dark">{tradingDays}</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-[10px] uppercase tracking-wider text-[#888] font-medium mb-1">Jours positifs</p>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted font-medium mb-1">Jours positifs</p>
             <p className="text-xl font-bold text-[#22c55e]">{winDays}</p>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
-            <p className="text-[10px] uppercase tracking-wider text-[#888] font-medium mb-1">Jours négatifs</p>
+          <div className="bg-card border border-border rounded-xl p-4 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted font-medium mb-1">Jours négatifs</p>
             <p className="text-xl font-bold text-[#ef4444]">{lossDays}</p>
           </div>
         </div>

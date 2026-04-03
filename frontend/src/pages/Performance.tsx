@@ -14,8 +14,6 @@ import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 import { fmtPnl, fmtPct, fmtDate } from '../lib/formatters'
 
-// ─── Heatmap ──────────────────────────────────────────────────────────────────
-
 interface HeatCell { weekday: number; hour: number; pnl: number; count: number }
 
 const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -37,13 +35,11 @@ function HeatmapGrid({ data }: { data: HeatCell[] }) {
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[560px]">
-        {/* Hour labels */}
         <div className="flex gap-0.5 mb-1 pl-10">
           {HOURS.map((h) => (
             <div key={h} className="flex-1 text-center text-[9px] text-muted font-medium">{h}h</div>
           ))}
         </div>
-        {/* Rows */}
         {DAYS.map((day, wi) => (
           <div key={day} className="flex items-center gap-0.5 mb-0.5">
             <div className="w-9 text-[10px] text-muted font-medium text-right pr-2">{day}</div>
@@ -61,7 +57,6 @@ function HeatmapGrid({ data }: { data: HeatCell[] }) {
             })}
           </div>
         ))}
-        {/* Legend */}
         <div className="flex items-center gap-3 mt-3 pl-10">
           <span className="text-[10px] text-muted">Moins</span>
           {[-100, -50, -10, 0, 10, 50, 100].map((v) => (
@@ -118,7 +113,6 @@ function formatMonthLabel(ym: string): string {
   return `${MONTH_NAMES_FR[parseInt(month, 10) - 1]} ${year}`
 }
 
-// Group equity curve by month and compute monthly P&L / returns
 function buildMonthlyRows(curve: EquityPoint[]): MonthRow[] {
   if (curve.length === 0) return []
 
@@ -137,11 +131,8 @@ function buildMonthlyRows(curve: EquityPoint[]): MonthRow[] {
     let prevEquity: number
 
     if (idx === 0) {
-      // First month: use first point of curve as baseline
       prevEquity = curve[0].equity - (lastEquity - points[0].equity) - (points[0].equity - curve[0].equity)
-      // Simplified: equity at start of first month
       prevEquity = points[0].equity
-      // Actually compute change within the month
       prevEquity = points[0].equity
     } else {
       const prevMonth = months[idx - 1]
@@ -194,8 +185,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 
 function SummaryTile({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center bg-card rounded-2xl px-6 py-4">
-      <p className="text-[10px] uppercase tracking-wider text-[#888] font-medium mb-1">{label}</p>
+    <div className="flex flex-col items-center justify-center bg-card border border-border rounded-xl px-6 py-4">
+      <p className="text-[10px] uppercase tracking-wider text-muted font-medium mb-1">{label}</p>
       <p className="text-xl font-bold" style={{ color: color ?? '#111' }}>
         {value}
       </p>
@@ -234,13 +225,11 @@ export default function Performance() {
 
   const monthlyRows = buildMonthlyRows(curve)
 
-  // Compute total return %
   const totalReturn =
     curve.length > 1 && curve[0].equity !== 0
       ? ((curve[curve.length - 1].equity - curve[0].equity) / curve[0].equity) * 100
       : null
 
-  // Format chart data — sample if too many points
   const chartData = curve.map((pt) => ({
     date: fmtDate(pt.date),
     Équité: pt.equity,
@@ -251,7 +240,7 @@ export default function Performance() {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-extrabold text-[#111]">Performance</h1>
-        <p className="text-[#888] text-sm mt-4">Sélectionnez un compte pour voir les performances.</p>
+        <p className="text-muted text-sm mt-4">Sélectionnez un compte pour voir les performances.</p>
       </div>
     )
   }
@@ -260,13 +249,13 @@ export default function Performance() {
     return (
       <div className="p-6 space-y-6">
         <h1 className="text-2xl font-extrabold text-[#111]">Performance</h1>
-        <div className="bg-white rounded-2xl p-5 animate-pulse h-80" />
+        <div className="bg-card border border-border rounded-xl p-5 animate-pulse h-80" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl p-5 animate-pulse h-20" />
+            <div key={i} className="bg-card border border-border rounded-xl p-5 animate-pulse h-20" />
           ))}
         </div>
-        <div className="bg-white rounded-2xl p-5 animate-pulse h-48" />
+        <div className="bg-card border border-border rounded-xl p-5 animate-pulse h-48" />
       </div>
     )
   }
@@ -275,7 +264,7 @@ export default function Performance() {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-extrabold text-[#111]">Performance</h1>
-        <div className="mt-6 bg-white rounded-2xl p-5 text-[#ef4444]">Erreur : {error}</div>
+        <div className="mt-6 bg-card border border-border rounded-xl p-5 text-[#ef4444]">Erreur : {error}</div>
       </div>
     )
   }
@@ -284,11 +273,10 @@ export default function Performance() {
     <div className="p-4 md:p-6 space-y-4 md:space-y-6">
       <h1 className="text-2xl font-extrabold text-dark">Performance</h1>
 
-      {/* Equity curve chart */}
-      <div className="bg-card rounded-2xl p-5">
+      <div className="bg-card border border-border rounded-xl p-5">
         <p className="text-[#111] font-semibold mb-4">Courbe de capital</p>
         {curve.length === 0 ? (
-          <div className="h-64 flex items-center justify-center text-[#888] text-sm">
+          <div className="h-64 flex items-center justify-center text-muted text-sm">
             Aucune donnée disponible.
           </div>
         ) : (
@@ -347,7 +335,6 @@ export default function Performance() {
         )}
       </div>
 
-      {/* Summary row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryTile
           label="Total P&L"
@@ -371,8 +358,7 @@ export default function Performance() {
         />
       </div>
 
-      {/* Heatmap */}
-      <div className="bg-card rounded-2xl p-5">
+      <div className="bg-card border border-border rounded-xl p-5">
         <p className="text-sm font-semibold text-dark mb-1">Heatmap — Heure × Jour</p>
         <p className="text-xs text-muted mb-4">P&L moyen par heure et jour de trading</p>
         {heatmap.length === 0 ? (
@@ -382,8 +368,7 @@ export default function Performance() {
         )}
       </div>
 
-      {/* Monthly breakdown table */}
-      <div className="bg-card rounded-2xl overflow-hidden">
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-[#f5f5f5]">
           <p className="text-[#111] font-semibold">Breakdown mensuel</p>
         </div>
@@ -408,8 +393,8 @@ export default function Performance() {
                     className={idx % 2 === 0 ? 'bg-card' : 'bg-surface'}
                   >
                     <td className="px-5 py-3 font-medium text-[#111]">{row.label}</td>
-                    <td className="px-5 py-3 text-right text-[#888]">{row.trades}</td>
-                    <td className="px-5 py-3 text-right text-[#888]">
+                    <td className="px-5 py-3 text-right text-muted">{row.trades}</td>
+                    <td className="px-5 py-3 text-right text-muted">
                       {row.trades > 1 ? fmtPct(row.win_rate) : '—'}
                     </td>
                     <td
@@ -430,10 +415,10 @@ export default function Performance() {
               <tfoot>
                 <tr className="border-t border-subtle bg-surface">
                   <td className="px-5 py-3 font-semibold text-[#111]">Total</td>
-                  <td className="px-5 py-3 text-right text-[#888] font-medium">
+                  <td className="px-5 py-3 text-right text-muted font-medium">
                     {summary?.trades_count ?? '—'}
                   </td>
-                  <td className="px-5 py-3 text-right text-[#888] font-medium">
+                  <td className="px-5 py-3 text-right text-muted font-medium">
                     {summary?.win_rate != null ? fmtPct(summary.win_rate * 100) : '—'}
                   </td>
                   <td

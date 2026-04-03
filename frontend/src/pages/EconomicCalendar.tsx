@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { api } from '../lib/api'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface EcoEvent {
   actual: number | null
   country: string
@@ -13,8 +11,6 @@ interface EcoEvent {
   time: string   // "2024-01-11 13:30:00" UTC
   unit: string
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const COUNTRY_META: Record<string, { flag: string; currency: string }> = {
   US:  { flag: '🇺🇸', currency: 'USD' },
@@ -96,22 +92,18 @@ function impactStyle(impact: string) {
   return IMPACT_STYLES[impact as keyof typeof IMPACT_STYLES] ?? IMPACT_STYLES.low
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function EconomicCalendar() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [events, setEvents] = useState<EcoEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Filters
   const [impactFilter, setImpactFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [currencyFilter, setCurrencyFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
 
   const week = useMemo(() => getWeekBounds(weekOffset), [weekOffset])
 
-  // Fetch when week changes
   useEffect(() => {
     setLoading(true)
     setError(null)
@@ -121,7 +113,6 @@ export default function EconomicCalendar() {
       .finally(() => setLoading(false))
   }, [week.from, week.to])
 
-  // Apply filters client-side
   const filtered = useMemo(() => {
     return events.filter((ev) => {
       if (impactFilter !== 'all' && ev.impact !== impactFilter) return false
@@ -131,7 +122,6 @@ export default function EconomicCalendar() {
     })
   }, [events, impactFilter, currencyFilter, search])
 
-  // Group by date
   const byDate = useMemo(() => {
     const map: Record<string, EcoEvent[]> = {}
     filtered.forEach((ev) => {
@@ -142,7 +132,6 @@ export default function EconomicCalendar() {
     return Object.entries(map).sort(([a], [b]) => a.localeCompare(b))
   }, [filtered])
 
-  // Count by impact for header stats
   const counts = useMemo(() => ({
     high:   events.filter((e) => e.impact === 'high').length,
     medium: events.filter((e) => e.impact === 'medium').length,
@@ -154,7 +143,6 @@ export default function EconomicCalendar() {
   return (
     <div className="p-4 md:p-6 space-y-4">
 
-      {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-extrabold text-dark">Calendrier Économique</h1>
@@ -167,7 +155,6 @@ export default function EconomicCalendar() {
           )}
         </div>
 
-        {/* Week navigation */}
         <div className="flex items-center gap-1 bg-subtle rounded-xl p-1">
           <button
             onClick={() => setWeekOffset((o) => o - 1)}
@@ -196,10 +183,8 @@ export default function EconomicCalendar() {
         </div>
       </div>
 
-      {/* ── Filters bar ──────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
 
-        {/* Impact filter */}
         <div className="flex items-center gap-1.5 bg-subtle rounded-xl p-1 self-start">
           {(['all', 'high', 'medium', 'low'] as const).map((lvl) => (
             <button
@@ -219,7 +204,6 @@ export default function EconomicCalendar() {
           ))}
         </div>
 
-        {/* Currency filter */}
         <div className="flex items-center gap-1 flex-wrap">
           <button
             onClick={() => setCurrencyFilter('all')}
@@ -246,7 +230,6 @@ export default function EconomicCalendar() {
           ))}
         </div>
 
-        {/* Search */}
         <div className="relative sm:ml-auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -261,9 +244,8 @@ export default function EconomicCalendar() {
         </div>
       </div>
 
-      {/* ── No API key state ────────────────────────────────────── */}
       {noApiKey && (
-        <div className="bg-card rounded-2xl p-6 border border-border">
+        <div className="bg-card border border-border rounded-xl p-6">
           <p className="text-sm font-semibold text-dark mb-2">🔑 Clé API Finnhub requise</p>
           <p className="text-xs text-muted leading-relaxed mb-3">
             Le calendrier économique utilise l'API gratuite de Finnhub.
@@ -278,18 +260,16 @@ export default function EconomicCalendar() {
         </div>
       )}
 
-      {/* ── Generic error ────────────────────────────────────────── */}
       {error && !noApiKey && (
-        <div className="bg-card rounded-2xl p-4 border border-red-200 dark:border-red-900">
+        <div className="bg-card border border-border rounded-xl p-4 border-red-200 dark:border-red-900">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
-      {/* ── Loading skeleton ─────────────────────────────────────── */}
       {loading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-card rounded-2xl p-4 space-y-3">
+            <div key={i} className="bg-card border border-border rounded-xl p-4 space-y-3">
               <div className="h-4 w-40 bg-subtle rounded animate-pulse" />
               {[1, 2, 3].map((j) => (
                 <div key={j} className="flex gap-3">
@@ -303,9 +283,8 @@ export default function EconomicCalendar() {
         </div>
       )}
 
-      {/* ── Empty state ──────────────────────────────────────────── */}
       {!loading && !error && filtered.length === 0 && events.length > 0 && (
-        <div className="bg-card rounded-2xl p-8 text-center">
+        <div className="bg-card border border-border rounded-xl p-8 text-center">
           <p className="text-muted text-sm">Aucun événement correspondant aux filtres.</p>
           <button
             onClick={() => { setImpactFilter('all'); setCurrencyFilter('all'); setSearch('') }}
@@ -317,20 +296,17 @@ export default function EconomicCalendar() {
       )}
 
       {!loading && !error && events.length === 0 && !noApiKey && (
-        <div className="bg-card rounded-2xl p-8 text-center">
+        <div className="bg-card border border-border rounded-xl p-8 text-center">
           <p className="text-muted text-sm">Aucun événement économique cette semaine.</p>
         </div>
       )}
 
-      {/* ── Events grouped by day ────────────────────────────────── */}
       {!loading && byDate.map(([date, dayEvents]) => (
-        <div key={date} className="bg-card rounded-2xl overflow-hidden">
-          {/* Day header */}
+        <div key={date} className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 border-b border-subtle bg-subtle/40">
             <p className="text-xs font-bold text-dark capitalize">{fmtDate(date)}</p>
           </div>
 
-          {/* Events list */}
           <div className="divide-y divide-subtle">
             {dayEvents.map((ev, idx) => {
               const style = impactStyle(ev.impact)
@@ -344,7 +320,6 @@ export default function EconomicCalendar() {
                   key={idx}
                   className={`flex items-start gap-3 px-4 py-3 ${hasActual ? '' : 'opacity-90'}`}
                 >
-                  {/* Impact dot + time */}
                   <div className="flex flex-col items-center gap-1 flex-shrink-0 pt-0.5 w-10">
                     <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${style.dot}`} />
                     <span className="text-[10px] text-muted font-mono leading-none">
@@ -352,7 +327,6 @@ export default function EconomicCalendar() {
                     </span>
                   </div>
 
-                  {/* Country + event */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-base leading-none">{getFlag(ev.country)}</span>
@@ -364,7 +338,6 @@ export default function EconomicCalendar() {
                     <p className="text-sm font-semibold text-dark mt-0.5 truncate">{ev.event}</p>
                   </div>
 
-                  {/* Values: Prév / Prévi / Réel */}
                   <div className="flex items-start gap-3 flex-shrink-0 text-right">
                     <div>
                       <p className="text-[9px] text-muted font-medium uppercase mb-0.5">Préc.</p>
