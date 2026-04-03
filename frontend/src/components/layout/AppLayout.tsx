@@ -5,6 +5,7 @@ import { useAccountStore } from '../../stores/account'
 import { useThemeStore } from '../../stores/theme'
 import { Toaster } from '../ui/Toaster'
 import { GlobalSearch } from '../ui/GlobalSearch'
+import { OnboardingModal } from '../ui/OnboardingModal'
 import { supabase } from '../../lib/supabase'
 import { api } from '../../lib/api'
 
@@ -123,14 +124,28 @@ const moreItems = [
 export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { activeAccountId } = useAccountStore()
+  const { activeAccountId, setActiveAccountId } = useAccountStore()
   const { isDark, toggle, init } = useThemeStore()
   const [moreOpen, setMoreOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [violationCount, setViolationCount] = useState(0)
   const [accountInfo, setAccountInfo] = useState<{ name: string; broker?: string } | null>(null)
+  const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => { init() }, [init])
+
+  // Check if first-time user (no accounts)
+  useEffect(() => {
+    api.get<{ id: string; name: string; broker?: string }[]>('/api/accounts')
+      .then(accounts => {
+        if (accounts.length === 0) {
+          setShowOnboarding(true)
+        } else if (!activeAccountId) {
+          setActiveAccountId(accounts[0].id)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Cmd+K
   useEffect(() => {
@@ -442,6 +457,7 @@ export function AppLayout() {
       )}
 
       {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
+      {showOnboarding && <OnboardingModal onDone={() => setShowOnboarding(false)} />}
       <Toaster />
     </div>
   )
