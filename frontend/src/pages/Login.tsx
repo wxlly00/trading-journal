@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+function toEmail(username: string) {
+  return `${username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')}@tj.app`
+}
+
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -13,8 +17,11 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
-    if (err) setError(err.message)
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email: toEmail(username),
+      password,
+    })
+    if (err) setError('Pseudo ou mot de passe incorrect.')
     else navigate('/')
     setLoading(false)
   }
@@ -35,13 +42,14 @@ export default function Login() {
         <p className="text-sm text-muted mb-6">Accédez à votre journal de trading</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="text-xs font-semibold text-text2 block mb-1.5">Email</label>
+            <label className="text-xs font-semibold text-text2 block mb-1.5">Pseudo</label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-dark outline-none focus:border-dark transition-all"
-              placeholder="trader@example.com"
+              placeholder="ex: trader_pro"
+              autoComplete="username"
               required
             />
           </div>
@@ -53,13 +61,9 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-dark outline-none focus:border-dark transition-all"
               placeholder="••••••••"
+              autoComplete="current-password"
               required
             />
-          </div>
-          <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-xs text-muted hover:text-dark transition-colors">
-              Mot de passe oublié ?
-            </Link>
           </div>
           {error && <p className="text-xs text-red bg-red-bg px-3 py-2 rounded-lg">{error}</p>}
           <button

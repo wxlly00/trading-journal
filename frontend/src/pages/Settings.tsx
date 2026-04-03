@@ -774,7 +774,7 @@ export default function Settings() {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-dark">{session?.user?.email ?? '—'}</p>
+              <p className="text-sm font-semibold text-dark">{session?.user?.user_metadata?.username ?? session?.user?.email ?? '—'}</p>
               <p className="text-xs text-muted mt-0.5">Connecté via Supabase Auth</p>
             </div>
             <button

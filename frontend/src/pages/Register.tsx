@@ -2,71 +2,59 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
+// Pseudo → faux email interne (jamais visible par l'utilisateur)
+function toEmail(username: string) {
+  return `${username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_')}@tj.app`
+}
+
+const Logo = () => (
+  <div className="flex items-center gap-2 mb-8">
+    <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
+      <rect x="2" y="12" width="4" height="10" rx="1" fill="#111"/>
+      <rect x="10" y="7" width="4" height="15" rx="1" fill="#111"/>
+      <rect x="18" y="2" width="4" height="20" rx="1" fill="#111"/>
+      <path d="M3 10 L11 5 L19 1" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+    <span className="text-xl font-extrabold text-dark">TradingJournal</span>
+  </div>
+)
+
 export default function Register() {
-  const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const u = username.trim()
+    if (u.length < 3) { setError('Le pseudo doit faire au moins 3 caractères.'); return }
+    if (!/^[a-zA-Z0-9_]+$/.test(u)) { setError('Pseudo : lettres, chiffres et _ uniquement.'); return }
     if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); return }
     if (password.length < 6) { setError('Minimum 6 caractères.'); return }
     setLoading(true)
     setError('')
     const { data, error: err } = await supabase.auth.signUp({
-      email,
+      email: toEmail(u),
       password,
-      options: { emailRedirectTo: `${window.location.origin}/` },
+      options: { data: { username: u } },
     })
     if (err) {
-      setError(err.message)
+      if (err.message.includes('already registered') || err.message.includes('already been registered')) {
+        setError('Ce pseudo est déjà pris.')
+      } else {
+        setError(err.message)
+      }
     } else if (data.session) {
-      // Auto-confirmed (email confirmation disabled in Supabase)
       navigate('/')
     } else {
-      setSent(true)
+      // Confirmation email désactivée mais pas de session — cas rare
+      setError('Compte créé. Connecte-toi.')
+      navigate('/login')
     }
     setLoading(false)
-  }
-
-  const Logo = () => (
-    <div className="flex items-center gap-2 mb-8">
-      <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none">
-        <rect x="2" y="12" width="4" height="10" rx="1" fill="#111"/>
-        <rect x="10" y="7" width="4" height="15" rx="1" fill="#111"/>
-        <rect x="18" y="2" width="4" height="20" rx="1" fill="#111"/>
-        <path d="M3 10 L11 5 L19 1" stroke="#16a34a" strokeWidth="2" strokeLinecap="round"/>
-      </svg>
-      <span className="text-xl font-extrabold text-dark">TradingJournal</span>
-    </div>
-  )
-
-  if (sent) {
-    return (
-      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
-        <div className="bg-card border border-border rounded-xl p-8 w-full max-w-sm">
-          <Logo />
-          <div className="text-center">
-            <div className="w-12 h-12 bg-green-bg rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" className="w-6 h-6">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <h1 className="text-xl font-extrabold text-dark mb-2">Vérifie ton email</h1>
-            <p className="text-sm text-muted mb-6">
-              Un lien de confirmation a été envoyé à <span className="text-dark font-medium">{email}</span>. Clique dessus pour activer ton compte.
-            </p>
-            <Link to="/login" className="text-sm font-semibold text-dark hover:underline">
-              Retour à la connexion
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -74,16 +62,19 @@ export default function Register() {
       <div className="bg-card border border-border rounded-xl p-8 w-full max-w-sm">
         <Logo />
         <h1 className="text-2xl font-extrabold text-dark mb-1">Créer un compte</h1>
-        <p className="text-sm text-muted mb-6">Commencez à tracker vos trades gratuitement</p>
+        <p className="text-sm text-muted mb-6">Choisis un pseudo et un mot de passe</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="text-xs font-semibold text-text2 block mb-1.5">Email</label>
+            <label className="text-xs font-semibold text-text2 block mb-1.5">
+              Pseudo <span className="font-normal text-muted">(lettres, chiffres, _)</span>
+            </label>
             <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-dark outline-none focus:border-dark transition-all"
-              placeholder="trader@example.com"
+              placeholder="ex: trader_pro"
+              autoComplete="username"
               required
             />
           </div>
@@ -95,6 +86,7 @@ export default function Register() {
               onChange={e => setPassword(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-dark outline-none focus:border-dark transition-all"
               placeholder="••••••••"
+              autoComplete="new-password"
               required
             />
           </div>
@@ -106,6 +98,7 @@ export default function Register() {
               onChange={e => setConfirm(e.target.value)}
               className="w-full bg-surface border border-border rounded-lg px-4 py-3 text-sm text-dark outline-none focus:border-dark transition-all"
               placeholder="••••••••"
+              autoComplete="new-password"
               required
             />
           </div>
