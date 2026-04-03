@@ -6,6 +6,7 @@ import { useThemeStore } from '../../stores/theme'
 import { Toaster } from '../ui/Toaster'
 import { GlobalSearch } from '../ui/GlobalSearch'
 import { OnboardingModal } from '../ui/OnboardingModal'
+import { InstallBanner } from '../ui/InstallBanner'
 import { supabase } from '../../lib/supabase'
 import { api } from '../../lib/api'
 
@@ -458,6 +459,7 @@ export function AppLayout() {
 
       {searchOpen && <GlobalSearch onClose={() => setSearchOpen(false)} />}
       {showOnboarding && <OnboardingModal onDone={() => setShowOnboarding(false)} />}
+      {!showOnboarding && <InstallBanner />}
       <Toaster />
     </div>
   )
