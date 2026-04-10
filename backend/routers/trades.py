@@ -1,6 +1,7 @@
 import uuid
 import csv
 import io
+import random
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Query
 from core.security import get_current_user, verify_api_key
@@ -63,6 +64,9 @@ async def create_trade(payload: dict, user: dict = Depends(get_current_user)):
     data: dict = {k: payload[k] for k in allowed if k in payload}
     data["user_id"] = user["sub"]
     data["account_id"] = account_id
+    # Ticket fictif négatif pour les trades saisis manuellement
+    if "ticket" not in data:
+        data["ticket"] = -random.randint(1, 2_147_483_647)
     data = enrich_trade(data)
 
     result = db.table("trades").insert(data).execute()
