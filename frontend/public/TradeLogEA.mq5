@@ -3,7 +3,7 @@
 //| Sends trades to TradeLog backend via HTTPS                       |
 //+------------------------------------------------------------------+
 #property copyright "TradeLog"
-#property version   "1.10"
+#property version   "1.11"
 #property strict
 
 input string ServerURL         = "https://tradingjournal-api.vercel.app"; // Backend URL
@@ -14,17 +14,20 @@ input bool   SendHistoryOnInit = true;  // Send full history at startup
 input int    HistoryDays       = 365;   // History days to import (0 = all)
 
 string endpoint;
+string heartbeatEndpoint;
 
 //+------------------------------------------------------------------+
 int OnInit()
 {
    endpoint = ServerURL + "/api/trades/ingest";
+   heartbeatEndpoint = ServerURL + "/api/accounts/heartbeat";
    if(ApiKey == "") {
       Print("TradeLog: ERROR — ApiKey is empty. Please configure the EA parameters.");
       return INIT_FAILED;
    }
-   Print("TradeLog EA v1.10 initialized. Endpoint: ", endpoint);
+   Print("TradeLog EA v1.11 initialized. Endpoint: ", endpoint);
    EventSetTimer(60);
+   SendHeartbeat();
 
    if(SendHistoryOnInit)
       SendHistory();
@@ -305,6 +308,7 @@ void OnTradeTransaction(const MqlTradeTransaction& trans,
 //+------------------------------------------------------------------+
 void OnTimer()
 {
+   SendHeartbeat();
    if(!SendFloating) return;
 
    for(int i = 0; i < PositionsTotal(); i++) {
@@ -337,6 +341,20 @@ void OnTimer()
       );
       SendWithRetry(payload);
    }
+}
+
+//+------------------------------------------------------------------+
+void SendHeartbeat()
+{
+   string headers = "Content-Type: application/json\r\nX-API-Key: " + ApiKey;
+   char post_data[];
+   StringToCharArray("{}", post_data, 0, 2);
+   char result_data[];
+   string result_headers;
+   int res = WebRequest("POST", heartbeatEndpoint, headers, 5000,
+                        post_data, result_data, result_headers);
+   if(res != 200)
+      Print("TradeLog: heartbeat failed. HTTP ", res);
 }
 
 //+------------------------------------------------------------------+

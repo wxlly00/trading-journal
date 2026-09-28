@@ -9,6 +9,7 @@ interface EcoEvent {
   impact: 'high' | 'medium' | 'low' | string
   prev: number | null
   time: string   // "2024-01-11 13:30:00" UTC
+  time_known?: boolean
   unit: string
 }
 
@@ -38,7 +39,7 @@ function getFlag(country: string) {
   return COUNTRY_META[country]?.flag ?? '🌐'
 }
 function getCurrency(country: string) {
-  return COUNTRY_META[country]?.currency ?? country
+  return COUNTRY_META[country]?.currency ?? (country || '—')
 }
 
 function getWeekBounds(offset = 0): { from: string; to: string; label: string } {
@@ -51,7 +52,8 @@ function getWeekBounds(offset = 0): { from: string; to: string; label: string } 
   const friday = new Date(monday)
   friday.setDate(monday.getDate() + 4)
 
-  const fmt = (d: Date) => d.toISOString().split('T')[0]
+  const fmt = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   const dayFmt = (d: Date) =>
     d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 
@@ -86,10 +88,11 @@ const IMPACT_STYLES = {
   high:   { dot: 'bg-red-500',    badge: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400',   label: 'Élevé'  },
   medium: { dot: 'bg-orange-400', badge: 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400', label: 'Moyen'  },
   low:    { dot: 'bg-gray-300',   badge: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', label: 'Faible' },
+  unknown: { dot: 'bg-gray-300', badge: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400', label: 'N/D' },
 }
 
 function impactStyle(impact: string) {
-  return IMPACT_STYLES[impact as keyof typeof IMPACT_STYLES] ?? IMPACT_STYLES.low
+  return IMPACT_STYLES[impact as keyof typeof IMPACT_STYLES] ?? IMPACT_STYLES.unknown
 }
 
 export default function EconomicCalendar() {
@@ -138,7 +141,9 @@ export default function EconomicCalendar() {
     low:    events.filter((e) => e.impact === 'low').length,
   }), [events])
 
-  const noApiKey = error?.includes('FINNHUB')
+  const hasKnownImpact = counts.high + counts.medium + counts.low > 0
+  const hasKnownCurrency = events.some((event) => COUNTRY_META[event.country])
+  const noApiKey = error?.includes('FRED_API_KEY')
 
   return (
     <div className="p-4 md:p-6 space-y-4">
@@ -146,7 +151,7 @@ export default function EconomicCalendar() {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-extrabold text-dark">Calendrier Économique</h1>
-          {!loading && !error && events.length > 0 && (
+          {!loading && !error && hasKnownImpact && (
             <p className="text-xs text-muted mt-0.5">
               <span className="text-red-500 font-semibold">{counts.high}</span> élevé ·{' '}
               <span className="text-orange-500 font-semibold">{counts.medium}</span> moyen ·{' '}
@@ -185,7 +190,7 @@ export default function EconomicCalendar() {
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
 
-        <div className="flex items-center gap-1.5 bg-subtle rounded-xl p-1 self-start">
+        {hasKnownImpact && <div className="flex items-center gap-1.5 bg-subtle rounded-xl p-1 self-start">
           {(['all', 'high', 'medium', 'low'] as const).map((lvl) => (
             <button
               key={lvl}
@@ -202,9 +207,9 @@ export default function EconomicCalendar() {
               {lvl === 'all' ? 'Tous' : impactStyle(lvl).label}
             </button>
           ))}
-        </div>
+        </div>}
 
-        <div className="flex items-center gap-1 flex-wrap">
+        {hasKnownCurrency && <div className="flex items-center gap-1 flex-wrap">
           <button
             onClick={() => setCurrencyFilter('all')}
             className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -228,7 +233,7 @@ export default function EconomicCalendar() {
               {cur}
             </button>
           ))}
-        </div>
+        </div>}
 
         <div className="relative sm:ml-auto">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
@@ -246,18 +251,22 @@ export default function EconomicCalendar() {
 
       {noApiKey && (
         <div className="bg-card border border-border rounded-xl p-6">
-          <p className="text-sm font-semibold text-dark mb-2">🔑 Clé API Finnhub requise</p>
+          <p className="text-sm font-semibold text-dark mb-2">🔑 Clé API FRED requise</p>
           <p className="text-xs text-muted leading-relaxed mb-3">
-            Le calendrier économique utilise l'API gratuite de Finnhub.
+            Le calendrier économique utilise l'API FRED de la Banque fédérale de réserve de Saint-Louis.
           </p>
           <ol className="text-xs text-dark space-y-1.5 mb-4">
-            <li>1. Va sur <strong>finnhub.io</strong> → crée un compte gratuit</li>
-            <li>2. Copie ta clé API (Dashboard → API key)</li>
-            <li>3. Ajoute dans Vercel : <code className="bg-subtle px-1.5 py-0.5 rounded font-mono">FINNHUB_API_KEY = ta_clé</code></li>
-            <li>4. Redéploie (ou ça se fait automatiquement)</li>
+            <li>1. Obtiens une clé API depuis ton compte FRED.</li>
+            <li>2. Ajoute <code className="bg-subtle px-1.5 py-0.5 rounded font-mono">FRED_API_KEY</code> dans les variables d'environnement du backend.</li>
+            <li>3. Redéploie le backend.</li>
           </ol>
-          <p className="text-xs text-muted">Tier gratuit : 60 requêtes/minute, suffisant pour cet usage.</p>
         </div>
+      )}
+
+      {!loading && !error && (
+        <p className="text-xs text-muted">
+          Source : FRED. Les dates de publication sont indicatives ; FRED ne fournit pas ici l'heure, l'impact, les prévisions ni les valeurs publiées.
+        </p>
       )}
 
       {error && !noApiKey && (
@@ -301,7 +310,7 @@ export default function EconomicCalendar() {
         </div>
       )}
 
-      {!loading && byDate.map(([date, dayEvents]) => (
+      {!loading && !error && byDate.map(([date, dayEvents]) => (
         <div key={date} className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="px-4 py-2.5 border-b border-subtle bg-subtle/40">
             <p className="text-xs font-bold text-dark capitalize">{fmtDate(date)}</p>
@@ -323,7 +332,7 @@ export default function EconomicCalendar() {
                   <div className="flex flex-col items-center gap-1 flex-shrink-0 pt-0.5 w-10">
                     <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${style.dot}`} />
                     <span className="text-[10px] text-muted font-mono leading-none">
-                      {fmtTime(ev.time)}
+                      {ev.time_known === false ? '—' : fmtTime(ev.time)}
                     </span>
                   </div>
 

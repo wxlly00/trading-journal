@@ -19,6 +19,12 @@ interface Account {
   created_at: string
 }
 
+interface Mt5Status {
+  state: 'active' | 'inactive' | 'never_connected'
+  last_seen_at: string | null
+  imported_trades_count: number
+}
+
 interface Alert {
   id: string
   type: 'drawdown' | 'loss_streak'
@@ -112,6 +118,8 @@ export default function Settings() {
   // Accounts state
   const [accounts, setAccounts] = useState<Account[]>([])
   const [loadingAccounts, setLoadingAccounts] = useState(true)
+  const [mt5Status, setMt5Status] = useState<Mt5Status | null>(null)
+  const [mt5StatusError, setMt5StatusError] = useState(false)
   const [newAccount, setNewAccount] = useState({ name: '', broker: '', initial_capital: '' })
   const [showNewAccountForm, setShowNewAccountForm] = useState(false)
   const [creatingAccount, setCreatingAccount] = useState(false)
@@ -158,6 +166,35 @@ export default function Settings() {
       .catch(() => setAccounts([]))
       .finally(() => setLoadingAccounts(false))
   }, [])
+
+  useEffect(() => {
+    if (!activeAccountId) {
+      setMt5Status(null)
+      setMt5StatusError(false)
+      return
+    }
+    let cancelled = false
+    setMt5Status(null)
+    setMt5StatusError(false)
+    const loadStatus = () => {
+      api.get<Mt5Status>(`/api/accounts/${activeAccountId}/mt5-status`)
+        .then((status) => {
+          if (!cancelled) {
+            setMt5Status(status)
+            setMt5StatusError(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setMt5StatusError(true)
+        })
+    }
+    loadStatus()
+    const timer = window.setInterval(loadStatus, 60_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [activeAccountId])
 
   // Load alerts when activeAccountId changes
   useEffect(() => {
@@ -497,6 +534,32 @@ export default function Settings() {
         <SectionTitle>Connexion EA</SectionTitle>
         <Card>
           <div className="space-y-4">
+            <div className="pb-4 border-b border-subtle">
+              {!activeAccountId ? (
+                <p className="text-xs text-muted">Activez un compte pour voir sa connexion MT5.</p>
+              ) : mt5StatusError ? (
+                <p className="text-xs text-red">État de la connexion indisponible.</p>
+              ) : !mt5Status ? (
+                <p className="text-xs text-muted">Vérification de la connexion MT5...</p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${mt5Status.state === 'active' ? 'bg-green-500' : mt5Status.state === 'inactive' ? 'bg-amber-500' : 'bg-muted'}`} />
+                    <span className="text-sm font-semibold text-dark">
+                      {mt5Status.state === 'active' ? 'MT5 connecté' : mt5Status.state === 'inactive' ? 'MT5 inactif' : 'MT5 jamais connecté'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted mt-1">
+                    {mt5Status.last_seen_at
+                      ? `Dernier signal : ${new Date(mt5Status.last_seen_at).toLocaleString('fr-FR')}`
+                      : 'Aucun signal reçu de l’Expert Advisor.'}
+                  </p>
+                  <p className="text-xs text-muted mt-1">
+                    {mt5Status.imported_trades_count} trade{mt5Status.imported_trades_count > 1 ? 's' : ''} importé{mt5Status.imported_trades_count > 1 ? 's' : ''} (EA ou CSV)
+                  </p>
+                </>
+              )}
+            </div>
             {/* API URL */}
             <div>
               <label className="text-xs text-muted font-medium block mb-1.5">URL d'ingestion</label>

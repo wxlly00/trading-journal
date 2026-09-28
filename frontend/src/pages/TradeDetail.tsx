@@ -221,6 +221,100 @@ function ChecklistSection({ tradeId }: { tradeId: string }) {
   )
 }
 
+interface TradingRule {
+  id: string
+  title: string
+  active: boolean
+}
+
+interface RuleViolation {
+  id: string
+  rule_id: string
+}
+
+function RuleViolationsSection({ tradeId }: { tradeId: string }) {
+  const [rules, setRules] = useState<TradingRule[]>([])
+  const [violations, setViolations] = useState<RuleViolation[]>([])
+  const [selectedRule, setSelectedRule] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
+    try {
+      const [allRules, linked] = await Promise.all([
+        api.get<TradingRule[]>('/api/rules'),
+        api.get<RuleViolation[]>(`/api/rules/violations/trade/${tradeId}`),
+      ])
+      setRules(allRules)
+      setViolations(linked)
+      setError('')
+    } catch {
+      setError('Impossible de charger les règles de ce trade.')
+    }
+  }, [tradeId])
+
+  useEffect(() => { load() }, [load])
+
+  async function addViolation() {
+    if (!selectedRule || busy) return
+    setBusy(true)
+    try {
+      await api.post(`/api/rules/${selectedRule}/violation`, { trade_id: tradeId })
+      setSelectedRule('')
+      await load()
+    } catch {
+      setError("Impossible d'enregistrer cette violation.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function removeViolation(id: string) {
+    if (busy) return
+    setBusy(true)
+    try {
+      await api.delete(`/api/rules/violations/${id}`)
+      await load()
+    } catch {
+      setError('Impossible de retirer cette violation.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const available = rules.filter(rule => rule.active && !violations.some(v => v.rule_id === rule.id))
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+      <div>
+        <p className="text-[13px] font-bold text-dark">Règles enfreintes</p>
+        <p className="text-[11px] text-muted mt-1">Associe une erreur à ce trade pour la retrouver dans le bilan des règles.</p>
+      </div>
+      {violations.length > 0 && (
+        <div className="space-y-2">
+          {violations.map(violation => (
+            <div key={violation.id} className="flex items-center justify-between gap-2 rounded-lg bg-red-bg px-3 py-2">
+              <span className="text-[12px] font-medium text-dark">{rules.find(rule => rule.id === violation.rule_id)?.title ?? 'Règle supprimée'}</span>
+              <button onClick={() => removeViolation(violation.id)} disabled={busy} className="text-[11px] font-semibold text-red disabled:opacity-40">Retirer</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {available.length > 0 && (
+        <div className="flex gap-2">
+          <select value={selectedRule} onChange={event => setSelectedRule(event.target.value)} className="min-w-0 flex-1 bg-surface border border-border rounded-lg px-3 py-2 text-[12px] text-dark">
+            <option value="">Choisir une règle</option>
+            {available.map(rule => <option key={rule.id} value={rule.id}>{rule.title}</option>)}
+          </select>
+          <button onClick={addViolation} disabled={!selectedRule || busy} className="px-3 py-2 rounded-lg bg-dark text-white text-[12px] font-semibold disabled:opacity-40">Ajouter</button>
+        </div>
+      )}
+      {rules.length === 0 && !error && <p className="text-[11px] text-muted">Crée d'abord une règle dans la page Règles.</p>}
+      {error && <p className="text-[11px] text-red" role="alert">{error}</p>}
+    </div>
+  )
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function SkeletonBlock({ h }: { h?: string }) {
@@ -683,6 +777,8 @@ export default function TradeDetail() {
 
         {/* ── Checklist ────────────────────────────────────────────────────── */}
         <ChecklistSection tradeId={trade.id} />
+
+        <RuleViolationsSection tradeId={trade.id} />
 
         {/* ── Tags ─────────────────────────────────────────────────────────── */}
         <div className="bg-card border border-border rounded-xl p-4">

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../lib/api'
 import { useAccountStore } from '../stores/account'
 import { fmtPnl } from '../lib/formatters'
@@ -82,22 +82,59 @@ export default function Calendar() {
   const [dayData, setDayData] = useState<DayData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const fetchCalendar = useCallback(() => {
-    if (!activeAccountId) return
-    setLoading(true)
-    setError(null)
-    const ym = toYYYYMM(year, month)
-    api
-      .get<DayData[]>(`/api/stats/calendar?account_id=${activeAccountId}&month=${ym}`)
-      .then(setDayData)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [activeAccountId, year, month])
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
-    fetchCalendar()
-  }, [fetchCalendar])
+    if (!activeAccountId) {
+      setDayData([])
+      setLoading(false)
+      setError(null)
+      return
+    }
+
+    let cancelled = false
+    let latestRequest = 0
+    const params = new URLSearchParams({
+      account_id: activeAccountId,
+      month: toYYYYMM(year, month),
+      timezone_name: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    })
+    const load = (showLoading: boolean) => {
+      const request = ++latestRequest
+      if (showLoading) {
+        setLoading(true)
+        setError(null)
+      }
+      api.get<DayData[]>(`/api/stats/calendar?${params.toString()}`)
+        .then((days) => {
+          if (!cancelled && request === latestRequest) {
+            setDayData(days)
+            setError(null)
+          }
+        })
+        .catch((e: Error) => {
+          if (!cancelled && request === latestRequest) setError(e.message)
+        })
+        .finally(() => {
+          if (!cancelled && request === latestRequest) setLoading(false)
+        })
+    }
+
+    load(true)
+    const interval = window.setInterval(() => load(false), 60_000)
+    const onFocus = () => load(false)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') load(false)
+    }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [activeAccountId, year, month, refreshKey])
 
   function prevMonth() {
     if (month === 0) {
@@ -163,6 +200,14 @@ export default function Calendar() {
             aria-label="Mois suivant"
           >
             ›
+          </button>
+          <button
+            onClick={() => setRefreshKey((key) => key + 1)}
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white shadow-sm hover:bg-[#f5f5f5] transition-colors text-dark"
+            aria-label="Actualiser le calendrier"
+            title="Actualiser"
+          >
+            ↻
           </button>
         </div>
       </div>

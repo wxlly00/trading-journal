@@ -35,6 +35,9 @@ async def ingest_trade(payload: dict, account: dict = Depends(verify_api_key)):
     else:
         db.table("trades").insert(data).execute()
 
+    # Existing EA versions do not send a separate heartbeat.
+    db.table("accounts").update({"last_seen_at": datetime.now(timezone.utc).isoformat()}).eq("id", account["id"]).execute()
+
     try:
         from services.alerts import check_alerts
         await check_alerts(account["id"], account["user_id"])
