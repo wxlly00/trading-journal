@@ -1,6 +1,8 @@
 from collections import defaultdict
-from datetime import datetime
-from fastapi import APIRouter, Depends, Query
+from datetime import datetime, timezone
+import re
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+from fastapi import APIRouter, Depends, HTTPException, Query
 from core.security import get_current_user
 from db.supabase import get_client
 from services.calculator import calc_equity_curve, calc_sharpe
@@ -145,16 +147,54 @@ async def heatmap(
 
 
 @router.get("/calendar")
-async def calendar(account_id: str, month: str | None = None, user: dict = Depends(get_current_user)):
+async def calendar(
+    account_id: str,
+    month: str | None = None,
+    timezone_name: str = "UTC",
+    user: dict = Depends(get_current_user),
+):
+    try:
+        local_tz = ZoneInfo(timezone_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise HTTPException(status_code=400, detail="Fuseau horaire invalide")
+
+    start_utc = end_utc = None
+    if month:
+        if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month):
+            raise HTTPException(status_code=400, detail="Mois invalide")
+        year, month_number = map(int, month.split("-"))
+        start = datetime(year, month_number, 1, tzinfo=local_tz)
+        next_year = year + (month_number == 12)
+        next_month = month_number % 12 + 1
+        end = datetime(next_year, next_month, 1, tzinfo=local_tz)
+        start_utc = start.astimezone(timezone.utc).isoformat()
+        end_utc = end.astimezone(timezone.utc).isoformat()
+
     db = get_client()
-    trades = _closed_trades(db, account_id, user["sub"])
     data: dict[str, float] = defaultdict(float)
-    for t in trades:
-        if t.get("close_time"):
-            day = t["close_time"][:10]
-            if month and not day.startswith(month):
+    page_size = 1000
+    offset = 0
+    while True:
+        q = (db.table("trades")
+             .select("id,close_time,pnl_net")
+             .eq("account_id", account_id)
+             .eq("user_id", user["sub"])
+             .eq("status", "closed")
+             .order("close_time,id"))
+        if start_utc and end_utc:
+            q = q.gte("close_time", start_utc).lt("close_time", end_utc)
+        trades = q.range(offset, offset + page_size - 1).execute().data
+        for t in trades:
+            if not t.get("close_time"):
                 continue
+            close_time = datetime.fromisoformat(t["close_time"].replace("Z", "+00:00"))
+            if close_time.tzinfo is None:
+                close_time = close_time.replace(tzinfo=timezone.utc)
+            day = close_time.astimezone(local_tz).date().isoformat()
             data[day] += t.get("pnl_net") or 0
+        if len(trades) < page_size:
+            break
+        offset += page_size
     return [{"date": k, "pnl": round(v, 2)} for k, v in sorted(data.items())]
 
 

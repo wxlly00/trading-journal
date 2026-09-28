@@ -65,7 +65,7 @@ The MetaTrader integration uses a dedicated account API key for ingestion. The r
 | Authentication | Supabase Auth |
 | Trading Integration | MetaTrader 5, MQL5 |
 | Infrastructure | Docker, Vercel, Render |
-| External Data | Finnhub economic calendar |
+| External Data | FRED release calendar (dates and names) |
 | Optional AI | Anthropic API |
 
 ## Selected Analytics

@@ -16,3 +16,5 @@ services:
         value: https://your-app.vercel.app
       - key: RESEND_API_KEY
         sync: false
+      - key: FRED_API_KEY
+        sync: false

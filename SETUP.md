@@ -46,10 +46,9 @@ cd trading-journal
 **Créer les tables :**
 1. Menu gauche → **SQL Editor**
 2. **New query**
-3. Ouvre le fichier `supabase/migrations/001_initial_schema.sql` dans un éditeur texte
-4. Copie tout le contenu et colle-le dans l'éditeur SQL
-5. Clique **Run** (ou Ctrl+Entrée)
-6. Tu dois voir "Success. No rows returned"
+3. Ouvre les fichiers de `supabase/migrations/` dans l'ordre de leur nom
+4. Pour chaque fichier, copie son contenu dans l'éditeur SQL puis clique **Run** (ou Ctrl+Entrée)
+5. Vérifie que chaque requête affiche "Success. No rows returned" avant de passer à la suivante
 
 **Récupérer les clés API :**
 1. Menu gauche → **Settings** → **API**
@@ -76,9 +75,12 @@ VITE_SUPABASE_URL=https://TON_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI...
 
 CORS_ORIGINS=http://localhost
+FRED_API_KEY=ta_cle_api_fred
 ```
 
 > Ne mets pas d'espace autour du `=`. Ne mets pas les clés entre guillemets.
+
+La clé FRED se crée depuis ton compte sur [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html). Elle doit être configurée sur le backend (en local ou dans les variables d'environnement de l'hébergeur). Le calendrier affiche les dates et les noms des publications FRED ; cette API ne fournit pas l'heure, l'impact, les prévisions ou les résultats dans cet endpoint.
 
 ### 5. Lancer l'application
 

@@ -1,5 +1,17 @@
 import { useState, useEffect } from 'react'
 import { api } from '../lib/api'
+import { useAccountStore } from '../stores/account'
+
+interface ImpactGroup {
+  count: number
+  pnl_net: number
+  average_pnl_net: number | null
+}
+
+interface Impact {
+  with_violation: ImpactGroup
+  without_violation: ImpactGroup
+}
 
 interface Rule {
   id: string
@@ -27,7 +39,10 @@ const DEFAULT_RULES = [
 ]
 
 export default function Rules() {
+  const { activeAccountId } = useAccountStore()
   const [rules, setRules] = useState<Rule[]>([])
+  const [impact, setImpact] = useState<Impact | null>(null)
+  const [impactError, setImpactError] = useState(false)
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -48,6 +63,20 @@ export default function Rules() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    if (!activeAccountId) {
+      setImpact(null)
+      return
+    }
+    let cancelled = false
+    setImpact(null)
+    setImpactError(false)
+    api.get<Impact>(`/api/rules/impact?account_id=${encodeURIComponent(activeAccountId)}`)
+      .then(data => { if (!cancelled) setImpact(data) })
+      .catch(() => { if (!cancelled) setImpactError(true) })
+    return () => { cancelled = true }
+  }, [activeAccountId])
 
   async function handleAdd() {
     if (!newTitle.trim()) return
@@ -116,6 +145,44 @@ export default function Rules() {
               <p className="text-xs text-muted mt-0.5">{label}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {activeAccountId && (
+        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+          <div>
+            <p className="text-sm font-bold text-dark">Trades avec et sans règle enfreinte</p>
+            <p className="text-xs text-muted mt-1">Trades clôturés du compte sélectionné, avec P&L net renseigné. Cette comparaison ne mesure pas ce que chaque erreur a coûté à elle seule.</p>
+          </div>
+          {impactError && <p className="text-xs text-red">Impossible de charger la comparaison.</p>}
+          {!impact && !impactError && <p className="text-xs text-muted">Chargement...</p>}
+          {impact && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {([
+                  ['Avec violation', impact.with_violation],
+                  ['Sans violation enregistrée', impact.without_violation],
+                ] as const).map(([label, group]) => (
+                  <div key={label} className="rounded-xl bg-surface border border-border p-4">
+                    <p className="text-xs font-semibold text-muted">{label}</p>
+                    <p className="text-xl font-black text-dark mt-1">{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(group.pnl_net)}</p>
+                    <p className="text-xs text-muted">P&L net total · {group.count} trade{group.count > 1 ? 's' : ''}</p>
+                    <p className="text-xs text-muted mt-1">Moyenne : {group.average_pnl_net == null ? '—' : new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(group.average_pnl_net)}</p>
+                  </div>
+                ))}
+              </div>
+              {impact.with_violation.average_pnl_net != null && impact.without_violation.average_pnl_net != null && (
+                <p className="text-xs text-muted">
+                  Écart de P&L moyen (avec − sans violation) :{' '}
+                  <strong className="text-dark">
+                    {new Intl.NumberFormat('fr-FR', { signDisplay: 'always', maximumFractionDigits: 2 }).format(
+                      impact.with_violation.average_pnl_net - impact.without_violation.average_pnl_net,
+                    )}
+                  </strong>
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
